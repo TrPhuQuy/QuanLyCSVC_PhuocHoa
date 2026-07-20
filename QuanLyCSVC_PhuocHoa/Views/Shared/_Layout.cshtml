@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Quản lý CSVC THCS Phước Hòa</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+        <div class="container-fluid">
+            <a class="navbar-brand fw-bold" asp-controller="Home" asp-action="Index">
+                <i class="bi bi-building"></i> CSVC THCS Phước Hòa
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="mainNav">
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <ul class="navbar-nav me-auto">
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Index"><i class="bi bi-speedometer2"></i> Tổng quan</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-list-task"></i> Danh mục</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="Phong" asp-action="Index"><i class="bi bi-door-open me-2"></i>Phòng</a></li>
+                                <li><a class="dropdown-item" asp-controller="LoaiPhong" asp-action="Index"><i class="bi bi-window-sidebar me-2"></i>Loại phòng</a></li>
+                                <li><a class="dropdown-item" asp-controller="LoaiThietBi" asp-action="Index"><i class="bi bi-tags me-2"></i>Loại thiết bị</a></li>
+                                <li><a class="dropdown-item" asp-controller="BoMon" asp-action="Index"><i class="bi bi-journal-bookmark me-2"></i>Tổ bộ môn</a></li>
+                                <li><a class="dropdown-item" asp-controller="NhaCungCap" asp-action="Index"><i class="bi bi-truck me-2"></i>Nhà cung cấp</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="ThietBi" asp-action="Index"><i class="bi bi-pc-display"></i> Thiết bị</a></li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="bi bi-gear-wide-connected"></i> Nghiệp vụ</a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" asp-controller="PhieuMuon" asp-action="Index"><i class="bi bi-calendar-event me-2"></i>Mượn trả thiết bị</a></li>
+                                <li><a class="dropdown-item" asp-controller="DieuChuyen" asp-action="Index"><i class="bi bi-arrow-left-right me-2"></i>Điều chuyển thiết bị</a></li>
+                                <li><a class="dropdown-item" asp-controller="PhieuBaoTri" asp-action="Index"><i class="bi bi-tools me-2"></i>Phiếu bảo trì</a></li>
+                                @if (User.IsInRole(QuanLyCSVC_PhuocHoa.Models.AppRoles.Admin) || User.IsInRole(QuanLyCSVC_PhuocHoa.Models.AppRoles.NhanVienThietBi))
+                                {
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" asp-controller="PhieuNhap" asp-action="Index"><i class="bi bi-box-seam me-2"></i>Nhập kho thiết bị</a></li>
+                                    <li><a class="dropdown-item" asp-controller="PhieuThanhLy" asp-action="Index"><i class="bi bi-trash me-2"></i>Thanh lý thiết bị</a></li>
+                                    <li><a class="dropdown-item" asp-controller="DotKiemKe" asp-action="Index"><i class="bi bi-clipboard-check me-2"></i>Kiểm kê tài sản</a></li>
+                                }
+                            </ul>
+                        </li>
+                        @if (User.IsInRole(QuanLyCSVC_PhuocHoa.Models.AppRoles.Admin))
+                        {
+                            <li class="nav-item"><a class="nav-link" asp-controller="NhanVien" asp-action="Index"><i class="bi bi-people"></i> Nhân viên</a></li>
+                            <li class="nav-item"><a class="nav-link" asp-controller="LichSuHoatDong" asp-action="Index"><i class="bi bi-clock-history"></i> Nhật ký</a></li>
+                        }
+                    </ul>
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">
+                                <i class="bi bi-person-circle"></i> @User.Identity.Name
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item" asp-controller="Account" asp-action="ChangePassword"><i class="bi bi-key me-2"></i>Đổi mật khẩu</a>
+                                </li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="dropdown-item"><i class="bi bi-box-arrow-right"></i> Đăng xuất</button>
+                                    </form>
+                                </li>
+                            </ul>
+                        </li>
+                    </ul>
+                }
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid py-4 px-4">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                @TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                @TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        <main role="main">@RenderBody()</main>
+    </div>
+
+    <footer class="border-top py-3 mt-auto bg-light">
+        <div class="container-fluid text-center text-muted">
+            &copy; 2025-2026 - Hệ thống Quản lý Cơ sở vật chất - Trường THCS Phước Hòa
+        </div>
+    </footer>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

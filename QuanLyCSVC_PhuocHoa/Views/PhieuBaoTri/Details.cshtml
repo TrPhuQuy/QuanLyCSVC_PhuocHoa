@@ -1,0 +1,79 @@
+@model PhieuBaoTri
+@{
+    ViewData["Title"] = "Chi tiết Phiếu bảo trì";
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-0"><i class="bi bi-tools text-primary"></i> Phiếu bảo trì: @Model.MaBaoTri</h2>
+        <p class="text-muted mb-0">Ngày gửi sửa: <strong>@Model.NgayGui.ToString("dd/MM/yyyy")</strong></p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+        @if (User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.NhanVienThietBi))
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary"><i class="bi bi-pencil"></i> Cập nhật kết quả</a>
+        }
+    </div>
+</div>
+<div class="row g-4">
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-info-circle text-primary"></i> Thông tin phiếu</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Thiết bị:</span>
+                        <span class="fw-bold">@Model.ThietBi?.TenTb (@Model.ThietBi?.MaTb)</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Phòng đang ở:</span>
+                        <span class="fw-semibold">@Model.ThietBi?.Phong?.TenPhong</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Người gửi sửa:</span>
+                        <span class="fw-semibold">@Model.NguoiGui?.HoTen</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Đơn vị sửa chữa:</span>
+                        <span class="fw-semibold">@(Model.DonViSuaChua ?? "-")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Ngày gửi:</span>
+                        <span class="fw-semibold">@Model.NgayGui.ToString("dd/MM/yyyy")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Ngày nhận lại:</span>
+                        <span class="fw-semibold">@(Model.NgayNhanLai?.ToString("dd/MM/yyyy") ?? "Chưa nhận")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between px-0">
+                        <span class="text-muted">Chi phí:</span>
+                        <span class="fw-bold text-danger">@(Model.ChiPhi?.ToString("N0") ?? "Chưa có") đ</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span class="text-muted">Trạng thái:</span>
+                        @{
+                            var badge = Model.TrangThai == "Hoàn thành" ? "success"
+                                      : Model.TrangThai == "Không sửa được" ? "danger" : "warning";
+                        }
+                        <span class="badge bg-@badge fs-6">@Model.TrangThai</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3"><h5 class="mb-0 fw-semibold"><i class="bi bi-exclamation-triangle text-warning"></i> Nội dung hỏng hóc</h5></div>
+            <div class="card-body bg-light"><p class="mb-0" style="white-space:pre-wrap;">@Model.NoiDungHongHoc</p></div>
+        </div>
+        @if (!string.IsNullOrWhiteSpace(Model.KetQua))
+        {
+            <div class="card shadow-sm border-0">
+                <div class="card-header bg-white py-3"><h5 class="mb-0 fw-semibold"><i class="bi bi-check2-circle text-success"></i> Kết quả sửa chữa</h5></div>
+                <div class="card-body bg-light"><p class="mb-0" style="white-space:pre-wrap;">@Model.KetQua</p></div>
+            </div>
+        }
+    </div>
+</div>

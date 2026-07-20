@@ -1,0 +1,125 @@
+@model PhieuNhap
+@{
+    ViewData["Title"] = "Tạo Phiếu nhập Thiết bị";
+    var thietBis = ViewBag.ThietBis as System.Collections.IEnumerable ?? Enumerable.Empty<object>();
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>@ViewData["Title"]</h2>
+</div>
+<form asp-action="Create" method="post" id="nhapForm">
+    @Html.AntiForgeryToken()
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+    <input type="hidden" asp-for="MaPhieuNhap" />
+    <input type="hidden" asp-for="CreatedAt" />
+
+    <div class="row g-4">
+        <div class="col-md-5">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3"><h5 class="mb-0 fw-semibold">Thông tin phiếu nhập</h5></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Mã phiếu nhập</label>
+                        <input class="form-control" value="@Model.MaPhieuNhap" disabled />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NhaCungCapId" class="form-label">Nhà cung cấp *</label>
+                        <select asp-for="NhaCungCapId" class="form-select" asp-items="ViewBag.NhaCungCapId">
+                            <option value="">-- Chọn nhà cung cấp --</option>
+                        </select>
+                        <span asp-validation-for="NhaCungCapId" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NgayNhap" class="form-label">Ngày nhập *</label>
+                        <input asp-for="NgayNhap" class="form-control" type="date" required />
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="NguoiNhapId" class="form-label">Người nhập *</label>
+                        <select asp-for="NguoiNhapId" class="form-select" asp-items="ViewBag.NguoiNhapId">
+                            <option value="">-- Chọn người nhập --</option>
+                        </select>
+                        <span asp-validation-for="NguoiNhapId" class="text-danger"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="GhiChu" class="form-label">Ghi chú</label>
+                        <textarea asp-for="GhiChu" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-7">
+            <div class="card shadow-sm">
+                <div class="card-header bg-white py-3 d-flex justify-content-between">
+                    <h5 class="mb-0 fw-semibold">Chi tiết thiết bị nhập</h5>
+                    <button type="button" class="btn btn-sm btn-outline-success" onclick="addRow()">
+                        <i class="bi bi-plus"></i> Thêm thiết bị
+                    </button>
+                </div>
+                <div class="table-responsive">
+                    <table class="table mb-0" id="chiTietTable">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Thiết bị</th>
+                                <th style="width:80px">Số lượng</th>
+                                <th style="width:120px">Đơn giá (đ)</th>
+                                <th style="width:120px">Thành tiền</th>
+                                <th style="width:40px"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="chiTietBody">
+                        </tbody>
+                        <tfoot>
+                            <tr class="table-light">
+                                <td colspan="3" class="text-end fw-bold">Tổng tiền:</td>
+                                <td class="fw-bold text-success" id="tongTien">0 đ</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <button type="submit" class="btn btn-success"><i class="bi bi-save"></i> Lưu phiếu nhập</button>
+        <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const thietBis = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ThietBis ?? new List<object>()));
+
+        function addRow() {
+            const opts = thietBis.map(t => `<option value="${t.Id}">${t.Display}</option>`).join('');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><select name="thietBiIds" class="form-select form-select-sm"><option value="">-- Chọn --</option>${opts}</select></td>
+                <td><input name="soLuongs" type="number" min="1" value="1" class="form-control form-control-sm sl-input" /></td>
+                <td><input name="donGias" type="number" min="0" step="1000" value="0" class="form-control form-control-sm dg-input" /></td>
+                <td class="fw-semibold tt-cell">0 đ</td>
+                <td><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('tr').remove(); updateTotal()">×</button></td>`;
+            document.getElementById('chiTietBody').appendChild(tr);
+            tr.querySelector('.sl-input').addEventListener('input', updateTotal);
+            tr.querySelector('.dg-input').addEventListener('input', updateTotal);
+        }
+
+        function updateTotal() {
+            let total = 0;
+            document.querySelectorAll('#chiTietBody tr').forEach(tr => {
+                const sl = parseInt(tr.querySelector('.sl-input')?.value) || 0;
+                const dg = parseFloat(tr.querySelector('.dg-input')?.value) || 0;
+                const tt = sl * dg;
+                const ttCell = tr.querySelector('.tt-cell');
+                if (ttCell) ttCell.textContent = tt.toLocaleString('vi-VN') + ' đ';
+                total += tt;
+            });
+            document.getElementById('tongTien').textContent = total.toLocaleString('vi-VN') + ' đ';
+        }
+
+        // Thêm một hàng mặc định
+        addRow();
+    </script>
+}

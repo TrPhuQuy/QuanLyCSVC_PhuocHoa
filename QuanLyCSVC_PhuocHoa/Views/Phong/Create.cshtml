@@ -1,0 +1,60 @@
+@model Phong
+@{
+    ViewData["Title"] = "Thêm phòng";
+}
+
+<h2 class="mb-4">@ViewData["Title"]</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label asp-for="MaPhong" class="form-label"></label>
+                    <input asp-for="MaPhong" class="form-control" placeholder="VD: 6A1, TIN1" />
+                    <span asp-validation-for="MaPhong" class="text-danger"></span>
+                </div>
+                <div class="col-md-8">
+                    <label asp-for="TenPhong" class="form-label"></label>
+                    <input asp-for="TenPhong" class="form-control" />
+                    <span asp-validation-for="TenPhong" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="LoaiPhongId" class="form-label">Loại phòng</label>
+                    <select asp-for="LoaiPhongId" class="form-select" asp-items="ViewBag.LoaiPhongId"></select>
+                    <span asp-validation-for="LoaiPhongId" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="ViTri" class="form-label"></label>
+                    <input asp-for="ViTri" class="form-control" />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="SucChua" class="form-label"></label>
+                    <input asp-for="SucChua" class="form-control" type="number" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="NguoiPhuTrachId" class="form-label">Người phụ trách</label>
+                    <select asp-for="NguoiPhuTrachId" class="form-select" asp-items="ViewBag.NguoiPhuTrachId">
+                        <option value="">-- Không chọn --</option>
+                    </select>
+                    <span asp-validation-for="NguoiPhuTrachId" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="GhiChu" class="form-label">Ghi chú</label>
+                    <input asp-for="GhiChu" class="form-control" />
+                    <span asp-validation-for="GhiChu" class="text-danger"></span>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary">Lưu</button>
+                <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

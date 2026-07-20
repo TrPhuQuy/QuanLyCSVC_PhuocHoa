@@ -1,0 +1,91 @@
+@model NhanVien
+@{
+    ViewData["Title"] = "Chi tiết Nhân viên";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-0"><i class="bi bi-person-bounding-box text-primary"></i> @Model.HoTen</h2>
+        <p class="text-muted mb-0">Mã nhân viên: <strong>@Model.MaNv</strong></p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+        <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary"><i class="bi bi-pencil"></i> Sửa</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-shield-check"></i> Tài khoản hệ thống</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item px-0">
+                        <small class="text-muted d-block">Tên đăng nhập / Email</small>
+                        <span class="fw-semibold">@Model.Email</span>
+                    </li>
+                    <li class="list-group-item px-0">
+                        <small class="text-muted d-block">Vai trò hệ thống</small>
+                        <span class="badge bg-info text-dark fw-semibold mt-1">@Model.ChucVu</span>
+                    </li>
+                    <li class="list-group-item px-0">
+                        <small class="text-muted d-block">Trạng thái làm việc</small>
+                        <span class="badge bg-@(Model.TrangThai ? "success" : "secondary") mt-1">
+                            @(Model.TrangThai ? "Đang làm việc" : "Đã thôi việc / Tạm dừng")
+                        </span>
+                    </li>
+                    <li class="list-group-item px-0">
+                        <small class="text-muted d-block">Ngày tham gia hệ thống</small>
+                        <span>@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h5 class="card-title mb-0 fw-semibold text-dark"><i class="bi bi-file-person text-primary"></i> Hồ sơ lý lịch</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <small class="text-muted d-block">Họ và tên</small>
+                        <span class="fs-5 fw-bold text-dark">@Model.HoTen</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <small class="text-muted d-block">Giới tính</small>
+                        <span class="fs-5 fw-semibold">
+                            @(Model.GioiTinh.HasValue ? (Model.GioiTinh.Value ? "Nam" : "Nữ") : "-")
+                        </span>
+                    </div>
+
+                    <hr class="text-muted my-2" />
+
+                    <div class="col-sm-6">
+                        <small class="text-muted d-block">Ngày sinh</small>
+                        <span class="fw-semibold">@(Model.NgaySinh?.ToString("dd/MM/yyyy") ?? "-")</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <small class="text-muted d-block">Tổ bộ môn</small>
+                        <span class="fw-semibold text-primary">@(Model.BoMon?.TenBoMon ?? "-")</span>
+                    </div>
+
+                    <hr class="text-muted my-2" />
+
+                    <div class="col-sm-6">
+                        <small class="text-muted d-block">Số điện thoại</small>
+                        <span class="fw-semibold">@(Model.Sdt ?? "-")</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <small class="text-muted d-block">Email liên lạc</small>
+                        <span class="fw-semibold">@Model.Email</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

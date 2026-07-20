@@ -1,0 +1,50 @@
+@model Phong
+@{
+    ViewData["Title"] = "Chi tiết phòng";
+}
+
+<h2 class="mb-4">@Model.TenPhong <small class="text-muted">(@Model.MaPhong)</small></h2>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-body">
+                <p><strong>Loại:</strong> @(Model.LoaiPhong?.TenLoaiPhong ?? "-")</p>
+                <p><strong>Vị trí:</strong> @(Model.ViTri ?? "-")</p>
+                <p><strong>Người phụ trách:</strong> @(Model.NguoiPhuTrach?.HoTen ?? "-")</p>
+                <p><strong>Sức chứa:</strong> @(Model.SucChua?.ToString() ?? "-")</p>
+                <p><strong>Trạng thái:</strong> @Model.TrangThai</p>
+                <p><strong>Ghi chú:</strong> @(Model.GhiChu ?? "-")</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header"><strong>Thiết bị trong phòng (@(Model.ThietBi?.Count ?? 0))</strong></div>
+            <div class="table-responsive">
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>Mã TB</th><th>Tên</th><th>SL</th><th>Tình trạng</th></tr></thead>
+                    <tbody>
+                        @if (Model.ThietBi != null)
+                        {
+                            @foreach (var tb in Model.ThietBi.Where(t => !t.IsDeleted))
+                            {
+                                <tr>
+                                    <td>@tb.MaTb</td>
+                                    <td>@tb.TenTb</td>
+                                    <td>@tb.SoLuong @tb.DonViTinh</td>
+                                    <td><span class="badge bg-@EnumHelper.BadgeTinhTrang(tb.TinhTrang)">@EnumHelper.TenTinhTrang(tb.TinhTrang)</span></td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-3">
+    <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Sửa</a>
+    <a asp-action="Index" class="btn btn-secondary">Quay lại</a>
+</div>

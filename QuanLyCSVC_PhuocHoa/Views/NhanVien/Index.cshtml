@@ -1,0 +1,74 @@
+@model IEnumerable<NhanVien>
+@{
+    ViewData["Title"] = "Quản lý Nhân viên";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <h2><i class="bi bi-people text-primary"></i> Danh sách nhân viên & giáo viên</h2>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-person-plus"></i> Thêm nhân viên</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <input name="search" value="@ViewBag.Search" class="form-control" placeholder="Tìm theo mã, họ tên, email..." />
+    </div>
+    <div class="col-auto">
+        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i> Tìm kiếm</button>
+    </div>
+</form>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Mã NV</th>
+                    <th>Họ và tên</th>
+                    <th>Chức vụ / Vai trò</th>
+                    <th>Tổ bộ môn</th>
+                    <th>Số điện thoại</th>
+                    <th>Email</th>
+                    <th>Trạng thái</th>
+                    <th style="width: 180px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="8" class="text-center py-4 text-muted">Không tìm thấy nhân viên nào.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><strong>@item.MaNv</strong></td>
+                            <td>@item.HoTen</td>
+                            <td>
+                                <span class="fw-semibold text-dark">@item.ChucVu</span>
+                            </td>
+                            <td>@(item.BoMon?.TenBoMon ?? "-")</td>
+                            <td>@(item.Sdt ?? "-")</td>
+                            <td>@item.Email</td>
+                            <td>
+                                <span class="badge bg-@(item.TrangThai ? "success" : "secondary")">
+                                    @(item.TrangThai ? "Đang làm việc" : "Nghỉ việc/Tạm nghỉ")
+                                </span>
+                            </td>
+                            <td class="text-end text-nowrap">
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i></a>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Xóa nhân viên này đồng nghĩa với việc xóa tài khoản đăng nhập của họ. Bạn chắc chắn chứ?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

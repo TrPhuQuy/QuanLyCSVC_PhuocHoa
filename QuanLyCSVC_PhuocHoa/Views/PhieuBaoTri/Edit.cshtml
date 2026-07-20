@@ -1,0 +1,109 @@
+@model PhieuBaoTri
+@{
+    ViewData["Title"] = "Cập nhật Phiếu bảo trì";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-tools text-primary"></i> @ViewData["Title"]</h2>
+        <p class="text-muted mb-0">Cập nhật tiến độ, chi phí và kết quả sửa chữa thiết bị</p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+</div>
+
+<div class="card shadow-sm col-md-8">
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="MaBaoTri" />
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-bold">Mã phiếu bảo trì</label>
+                    <input class="form-control" value="@Model.MaBaoTri" disabled />
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="TrangThai" class="form-label fw-bold">Trạng thái phiếu *</label>
+                    <select asp-for="TrangThai" class="form-select">
+                        @foreach (var tt in ViewBag.TrangThais)
+                        {
+                            <option value="@tt">@tt</option>
+                        }
+                    </select>
+                    <span asp-validation-for="TrangThai" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-8">
+                    <label asp-for="ThietBiId" class="form-label fw-bold">Thiết bị bảo trì *</label>
+                    <select asp-for="ThietBiId" class="form-select" asp-items="ViewBag.ThietBiId">
+                        <option value="">-- Chọn thiết bị --</option>
+                    </select>
+                    <span asp-validation-for="ThietBiId" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-4">
+                    <label asp-for="NgayGui" class="form-label fw-bold">Ngày gửi sửa *</label>
+                    <input asp-for="NgayGui" class="form-control" type="date" required />
+                    <span asp-validation-for="NgayGui" class="text-danger"></span>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="NoiDungHongHoc" class="form-label fw-bold">Nội dung hỏng hóc *</label>
+                    <textarea asp-for="NoiDungHongHoc" class="form-control" rows="2" required></textarea>
+                    <span asp-validation-for="NoiDungHongHoc" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="DonViSuaChua" class="form-label fw-bold">Đơn vị sửa chữa</label>
+                    <input asp-for="DonViSuaChua" class="form-control" placeholder="Tên công ty / cửa hàng sửa chữa..." />
+                    <span asp-validation-for="DonViSuaChua" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="NguoiGuiId" class="form-label fw-bold">Người gửi sửa *</label>
+                    <select asp-for="NguoiGuiId" class="form-select" asp-items="ViewBag.NguoiGuiId">
+                        <option value="">-- Chọn người gửi --</option>
+                    </select>
+                    <span asp-validation-for="NguoiGuiId" class="text-danger"></span>
+                </div>
+
+                <hr class="my-3" />
+                <h5 class="text-secondary"><i class="bi bi-check2-square"></i> Kết quả & Nghiệm thu</h5>
+
+                <div class="col-md-6">
+                    <label asp-for="NgayNhanLai" class="form-label fw-bold">Ngày nhận lại</label>
+                    <input asp-for="NgayNhanLai" class="form-control" type="date" />
+                    <span asp-validation-for="NgayNhanLai" class="text-danger"></span>
+                </div>
+
+                <div class="col-md-6">
+                    <label asp-for="ChiPhi" class="form-label fw-bold">Chi phí sửa chữa (VNĐ)</label>
+                    <div class="input-group">
+                        <input asp-for="ChiPhi" class="form-control text-end font-monospace" type="number" placeholder="0" min="0" step="1000" />
+                        <span class="input-group-text">đ</span>
+                    </div>
+                    <span asp-validation-for="ChiPhi" class="text-danger"></span>
+                </div>
+
+                <div class="col-12">
+                    <label asp-for="KetQua" class="form-label fw-bold">Kết quả chi tiết / Ghi chú nghiệm thu</label>
+                    <textarea asp-for="KetQua" class="form-control" rows="2" placeholder="Ghi nhận linh kiện thay thế, chế độ bảo hành..."></textarea>
+                    <span asp-validation-for="KetQua" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mt-4 border-top pt-3">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Cập nhật phiếu</button>
+                <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

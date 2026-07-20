@@ -1,0 +1,133 @@
+@model PhieuMuon
+@{
+    ViewData["Title"] = "Đăng ký phiếu mượn thiết bị";
+}
+
+<h2 class="mb-4">@ViewData["Title"]</h2>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form asp-action="Create" method="post" id="phieuMuonForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="MaPhieuMuon" />
+            <input type="hidden" asp-for="GiaoVienId" />
+            <input type="hidden" asp-for="NgayDangKy" />
+            <input type="hidden" asp-for="TrangThai" />
+
+            <div asp-validation-summary="All" class="text-danger mb-3"></div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-4">
+                    <label class="form-label">Mã phiếu mượn</label>
+                    <input class="form-control" value="@Model.MaPhieuMuon" disabled />
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="NgayMuonDuKien" class="form-label">Ngày mượn dự kiến *</label>
+                    <input asp-for="NgayMuonDuKien" class="form-control" type="date" required />
+                    <span asp-validation-for="NgayMuonDuKien" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="NgayTraDuKien" class="form-label">Ngày trả dự kiến *</label>
+                    <input asp-for="NgayTraDuKien" class="form-control" type="date" required />
+                    <span asp-validation-for="NgayTraDuKien" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="GhiChu" class="form-label">Ghi chú mục đích mượn</label>
+                <textarea asp-for="GhiChu" class="form-control" rows="2" placeholder="Ví dụ: Mượn dạy tiết thực hành bài 12 môn Vật lý lớp 8A..."></textarea>
+            </div>
+
+            <h5 class="border-bottom pb-2 pt-3 text-primary"><i class="bi bi-pc-display-horizontal"></i> Danh sách thiết bị đăng ký mượn</h5>
+            
+            <div class="table-responsive">
+                <table class="table table-bordered align-middle" id="thietBiTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Thiết bị (Địa điểm - Số lượng còn)</th>
+                            <th style="width: 150px;">Số lượng mượn</th>
+                            <th style="width: 80px;"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Các dòng thiết bị sẽ được thêm bằng Javascript -->
+                    </tbody>
+                </table>
+            </div>
+
+            <button type="button" class="btn btn-outline-success btn-sm mb-4" id="btnAddThietBi">
+                <i class="bi bi-plus-circle"></i> Thêm thiết bị vào phiếu
+            </button>
+
+            <div class="mt-4 border-top pt-3">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Gửi yêu cầu mượn</button>
+                <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function () {
+            const thietBis = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.ThietBis));
+            let index = 0;
+
+            function addRow() {
+                let options = '<option value="">-- Chọn thiết bị --</option>';
+                thietBis.forEach(tb => {
+                    options += `<option value="${tb.Id}">${tb.Display}</option>`;
+                });
+
+                const html = `
+                    <tr class="tb-row">
+                        <td>
+                            <select name="thietBiIds" class="form-select select-tb" required>
+                                ${options}
+                            </select>
+                        </td>
+                        <td>
+                            <input name="soLuongs" class="form-control input-qty" type="number" min="1" value="1" required />
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-danger btn-sm btn-remove-row"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                `;
+                $('#thietBiTable tbody').append(html);
+                index++;
+            }
+
+            // Thêm dòng đầu tiên mặc định
+            addRow();
+
+            $('#btnAddThietBi').click(function () {
+                addRow();
+            });
+
+            $(document).on('click', '.btn-remove-row', function () {
+                if ($('#thietBiTable tbody tr').length > 1) {
+                    $(this).closest('tr').remove();
+                } else {
+                    alert('Phiếu mượn phải chứa ít nhất một thiết bị.');
+                }
+            });
+
+            // Ngăn chặn submit nếu chưa chọn thiết bị hợp lệ
+            $('#phieuMuonForm').submit(function (e) {
+                let valid = true;
+                $('.select-tb').each(function () {
+                    if ($(this).val() === "") {
+                        alert('Vui lòng chọn thiết bị cho tất cả các dòng.');
+                        valid = false;
+                        return false;
+                    }
+                });
+                if (!valid) {
+                    e.preventDefault();
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,121 @@
+@model DieuChuyen
+@{
+    ViewData["Title"] = "Chi tiết Phiếu điều chuyển";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-0"><i class="bi bi-arrow-left-right text-primary"></i> Phiếu điều chuyển: @Model.MaDieuChuyen</h2>
+        <p class="text-muted mb-0">Ngày đề nghị: <strong>@Model.NgayDeNghi.ToString("dd/MM/yyyy HH:mm")</strong></p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-7">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0 fw-semibold text-dark"><i class="bi bi-info-circle text-primary"></i> Thông tin điều chuyển</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-12">
+                        <small class="text-muted d-block">Thiết bị điều chuyển</small>
+                        <a asp-controller="ThietBi" asp-action="Details" asp-route-id="@Model.ThietBiId" class="fs-5 fw-bold text-decoration-none text-dark">
+                            @Model.ThietBi?.TenTb (@Model.ThietBi?.MaTb)
+                        </a>
+                    </div>
+
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">Phòng đi (Nguồn)</small>
+                        <span class="fs-6 fw-semibold text-secondary">
+                            <i class="bi bi-door-open"></i> @Model.PhongDi?.TenPhong
+                        </span>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">Phòng đến (Đích)</small>
+                        <span class="fs-6 fw-semibold text-primary">
+                            <i class="bi bi-door-open-fill"></i> @Model.PhongDen?.TenPhong
+                        </span>
+                    </div>
+
+                    <hr class="text-muted my-2" />
+
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">Số lượng điều chuyển</small>
+                        <span class="fs-5 fw-bold">@Model.SoLuong @Model.ThietBi?.DonViTinh</span>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">Ngày thực hiện dự kiến</small>
+                        <span class="fs-6 fw-semibold">@Model.NgayDieuChuyen.ToString("dd/MM/yyyy")</span>
+                    </div>
+
+                    <div class="col-12">
+                        <small class="text-muted d-block">Lý do điều chuyển</small>
+                        <div class="bg-light p-3 rounded border text-dark mt-1" style="white-space: pre-wrap;">@Model.LyDo</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-5">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3">
+                <h5 class="card-title mb-0 fw-semibold text-dark"><i class="bi bi-shield-check text-success"></i> Trạng thái phê duyệt</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush mb-3">
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span class="text-muted">Trạng thái phiếu:</span>
+                        <span class="badge bg-@EnumHelper.BadgeTrangThai(Model.TrangThai) fs-6">@EnumHelper.TenTrangThai(Model.TrangThai)</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span class="text-muted">Người đề nghị:</span>
+                        <span class="fw-semibold">@Model.NguoiDeNghi?.HoTen</span>
+                    </li>
+                    @if (Model.NguoiDuyet != null)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Người duyệt:</span>
+                            <span class="fw-semibold text-success">@Model.NguoiDuyet?.HoTen</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <span class="text-muted">Ngày duyệt:</span>
+                            <span class="fw-semibold">@Model.NgayDuyet?.ToString("dd/MM/yyyy HH:mm")</span>
+                        </li>
+                    }
+                </ul>
+
+                @if (Model.TrangThai == "Chờ duyệt" && (User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.NhanVienThietBi)))
+                {
+                    <div class="border-top pt-3">
+                        <div class="d-grid gap-2">
+                            <form asp-action="Approve" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('Bạn đồng ý duyệt phiếu điều chuyển này chứ?');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn btn-success w-100"><i class="bi bi-check-circle"></i> Phê duyệt điều chuyển</button>
+                            </form>
+                            
+                            <button class="btn btn-outline-danger" type="button" data-bs-toggle="collapse" data-bs-target="#rejectForm">
+                                <i class="bi bi-x-circle"></i> Từ chối yêu cầu
+                            </button>
+                        </div>
+
+                        <div class="collapse mt-3" id="rejectForm">
+                            <form asp-action="Reject" asp-route-id="@Model.Id" method="post" class="card card-body bg-light">
+                                @Html.AntiForgeryToken()
+                                <div class="mb-3">
+                                    <label class="form-label small fw-bold">Lý do từ chối:</label>
+                                    <input name="lyDoTuChoi" class="form-control form-control-sm" placeholder="Nhập lý do từ chối..." required />
+                                </div>
+                                <button type="submit" class="btn btn-danger btn-sm w-100">Xác nhận từ chối</button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

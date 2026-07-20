@@ -1,0 +1,62 @@
+@model IEnumerable<QuanLyCSVC_PhuocHoa.Models.Entities.LoaiPhong>
+@{
+    ViewData["Title"] = "Danh mục Loại phòng";
+}
+
+<div class="page-header d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-window-sidebar text-primary"></i> Danh sách loại phòng</h2>
+        <p class="text-muted mb-0">Quản lý phân loại các phòng học, phòng chức năng trong nhà trường</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm loại phòng</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-4">
+        <div class="input-group">
+            <input name="search" value="@ViewBag.Search" class="form-control" placeholder="Tìm theo tên hoặc mô tả..." />
+            <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i> Tìm kiếm</button>
+        </div>
+    </div>
+</form>
+
+<div class="card shadow-sm col-md-10">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 80px;">ID</th>
+                    <th>Tên loại phòng</th>
+                    <th>Mô tả</th>
+                    <th style="width: 180px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="4" class="text-center py-4 text-muted">Không tìm thấy loại phòng nào.</td>
+                    </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>@item.Id</td>
+                            <td><strong>@item.TenLoaiPhong</strong></td>
+                            <td class="text-muted">@item.MoTa</td>
+                            <td class="text-end text-nowrap">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i> Sửa</a>
+                                <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa loại phòng này?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

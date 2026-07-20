@@ -1,0 +1,135 @@
+@model ThietBi
+@{
+    ViewData["Title"] = "Chi tiết thiết bị";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-0"><i class="bi bi-pc-display text-primary"></i> @Model.TenTb</h2>
+        <p class="text-muted mb-0">Mã thiết bị: <strong>@Model.MaTb</strong></p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+        @if (User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.NhanVienThietBi))
+        {
+            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary"><i class="bi bi-pencil"></i> Sửa</a>
+        }
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-image"></i> Hình ảnh thiết bị</h5>
+            </div>
+            <div class="card-body text-center bg-light py-4">
+                @if (!string.IsNullOrEmpty(Model.HinhAnh))
+                {
+                    <img src="@Model.HinhAnh" class="img-fluid rounded shadow-sm max-height-300" style="max-height: 250px; object-fit: contain;" alt="@Model.TenTb" />
+                }
+                else
+                {
+                    <div class="py-5 text-muted">
+                        <i class="bi bi-image-alt display-1"></i>
+                        <p class="mt-2 mb-0">Không có hình ảnh</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="card shadow-sm border-0">
+            <div class="card-header bg-success text-white py-3">
+                <h5 class="card-title mb-0 fw-semibold"><i class="bi bi-tag"></i> Trạng thái & Vị trí</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span class="text-muted">Tình trạng:</span>
+                        <span class="badge bg-@EnumHelper.BadgeTinhTrang(Model.TinhTrang) fs-6">@EnumHelper.TenTinhTrang(Model.TinhTrang)</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span class="text-muted">Phòng quản lý:</span>
+                        <a asp-controller="Phong" asp-action="Details" asp-route-id="@Model.PhongId" class="fw-bold text-decoration-none">
+                            <i class="bi bi-door-open"></i> @Model.Phong?.TenPhong
+                        </a>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span class="text-muted">Vị trí sử dụng:</span>
+                        <span class="fw-semibold">@(Model.ViTriSuDung ?? "-")</span>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span class="text-muted">Bộ môn quản lý:</span>
+                        <span class="fw-semibold">@(Model.BoMon?.TenBoMon ?? "-")</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-8">
+        <div class="card shadow-sm border-0 mb-4">
+            <div class="card-header bg-white py-3 border-bottom">
+                <h5 class="card-title mb-0 fw-semibold text-dark"><i class="bi bi-info-circle text-primary"></i> Thông tin chi tiết</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <small class="text-muted d-block">Tên thiết bị</small>
+                        <span class="fs-5 fw-bold text-dark">@Model.TenTb</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <small class="text-muted d-block">Phân loại</small>
+                        <span class="fs-5 fw-semibold text-primary">@Model.LoaiThietBi?.TenLoaiTB</span>
+                    </div>
+
+                    <hr class="text-muted my-2" />
+
+                    <div class="col-sm-4">
+                        <small class="text-muted d-block">Số lượng</small>
+                        <span class="fs-5 fw-semibold">@Model.SoLuong @Model.DonViTinh</span>
+                    </div>
+                    <div class="col-sm-4">
+                        <small class="text-muted d-block">Đơn giá mua</small>
+                        <span class="fs-5 fw-semibold text-success">@(Model.GiaMua?.ToString("N0") ?? "-") đ</span>
+                    </div>
+                    <div class="col-sm-4">
+                        <small class="text-muted d-block">Tổng trị giá</small>
+                        <span class="fs-5 fw-bold text-success">@((Model.GiaMua * Model.SoLuong)?.ToString("N0") ?? "-") đ</span>
+                    </div>
+
+                    <hr class="text-muted my-2" />
+
+                    <div class="col-sm-4">
+                        <small class="text-muted d-block">Hãng sản xuất</small>
+                        <span class="fw-semibold">@(Model.HangSanXuat ?? "-")</span>
+                    </div>
+                    <div class="col-sm-4">
+                        <small class="text-muted d-block">Năm sản xuất</small>
+                        <span class="fw-semibold">@(Model.NamSanXuat?.ToString() ?? "-")</span>
+                    </div>
+                    <div class="col-sm-4">
+                        <small class="text-muted d-block">Ngày mua</small>
+                        <span class="fw-semibold">@(Model.NgayMua?.ToString("dd/MM/yyyy") ?? "-")</span>
+                    </div>
+
+                    <hr class="text-muted my-2" />
+
+                    <div class="col-sm-6">
+                        <small class="text-muted d-block">Nhà cung cấp</small>
+                        <span class="fw-semibold">@(Model.NhaCungCap?.TenNCC ?? "-")</span>
+                    </div>
+                    <div class="col-sm-6">
+                        <small class="text-muted d-block">Ngày đưa vào quản lý</small>
+                        <span class="fw-semibold">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                    </div>
+
+                    <div class="col-12 mt-3">
+                        <small class="text-muted d-block">Ghi chú</small>
+                        <div class="bg-light p-3 rounded border text-secondary" style="white-space: pre-wrap;">@(string.IsNullOrWhiteSpace(Model.GhiChu) ? "Không có ghi chú nào." : Model.GhiChu)</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

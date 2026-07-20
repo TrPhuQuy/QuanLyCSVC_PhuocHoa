@@ -1,0 +1,118 @@
+﻿@model QuanLyCSVC_PhuocHoa.Models.ViewModels.DashboardViewModel
+@{
+    ViewData["Title"] = "Tổng quan";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2 class="mb-0"><i class="bi bi-speedometer2 text-primary"></i> Bảng điều khiển</h2>
+        <p class="text-muted mb-0">Trường THCS Phước Hòa - Năm học 2025-2026</p>
+    </div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1">Tổng thiết bị</p>
+                        <h3 class="mb-0">@Model.TongThietBi</h3>
+                    </div>
+                    <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-pc-display"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1">Tổng phòng</p>
+                        <h3 class="mb-0">@Model.TongPhong</h3>
+                    </div>
+                    <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-door-open"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1">Giá trị tài sản</p>
+                        <h3 class="mb-0 fs-5">@Model.TongGiaTriTaiSan.ToString("N0") đ</h3>
+                    </div>
+                    <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-currency-dollar"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="text-muted mb-1">Chờ duyệt mượn</p>
+                        <h3 class="mb-0">@Model.PhieuMuonChoDuyet</h3>
+                    </div>
+                    <div class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-clock-history"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-md-8">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white"><strong>Thiết bị theo loại</strong></div>
+            <div class="card-body">
+                <canvas id="chartLoai" height="120"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card shadow-sm">
+            <div class="card-header bg-white"><strong>Tình trạng thiết bị</strong></div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><span class="badge bg-success me-2">&nbsp;</span>Tốt</span>
+                        <strong>@Model.ThietBiTot</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><span class="badge bg-danger me-2">&nbsp;</span>Hư hỏng</span>
+                        <strong>@Model.ThietBiHuHong</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><span class="badge bg-warning me-2">&nbsp;</span>Đang sửa chữa</span>
+                        <strong>@Model.ThietBiDangSua</strong>
+                    </li>
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span><span class="badge bg-secondary me-2">&nbsp;</span>Thanh lý</span>
+                        <strong>@Model.ThietBiThanhLy</strong>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script>
+        const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeTheoLoais.Select(x => x.TenLoai)));
+        const data = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeTheoLoais.Select(x => x.SoLuong)));
+        new Chart(document.getElementById('chartLoai'), {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{ label: 'Số lượng', data: data, backgroundColor: '#0d6efd' }]
+            },
+            options: { responsive: true, plugins: { legend: { display: false } } }
+        });
+    </script>
+}

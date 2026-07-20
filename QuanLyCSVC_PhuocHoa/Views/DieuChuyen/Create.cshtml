@@ -1,0 +1,70 @@
+@model DieuChuyen
+@{
+    ViewData["Title"] = "Đăng ký điều chuyển thiết bị";
+}
+
+<h2 class="mb-4">@ViewData["Title"]</h2>
+
+<div class="card shadow-sm col-md-8">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="MaDieuChuyen" />
+            <input type="hidden" asp-for="NguoiDeNghiId" />
+            <input type="hidden" asp-for="NgayDeNghi" />
+            <input type="hidden" asp-for="TrangThai" />
+
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="mb-3">
+                <label class="form-label">Mã phiếu điều chuyển</label>
+                <input class="form-control" value="@Model.MaDieuChuyen" disabled />
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="ThietBiId" class="form-label">Thiết bị cần chuyển *</label>
+                <select asp-for="ThietBiId" class="form-select" asp-items="ViewBag.ThietBiId">
+                    <option value="">-- Chọn thiết bị trong danh sách --</option>
+                </select>
+                <span asp-validation-for="ThietBiId" class="text-danger"></span>
+                <small class="text-muted">Hệ thống sẽ tự động xác định phòng hiện tại (Phòng đi) của thiết bị.</small>
+            </div>
+
+            <div class="row g-3 mb-3">
+                <div class="col-md-6">
+                    <label asp-for="PhongDenId" class="form-label">Phòng đến (Phòng nhận thiết bị) *</label>
+                    <select asp-for="PhongDenId" class="form-select" asp-items="ViewBag.PhongDenId">
+                        <option value="">-- Chọn phòng đến --</option>
+                    </select>
+                    <span asp-validation-for="PhongDenId" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="SoLuong" class="form-label">Số lượng điều chuyển *</label>
+                    <input asp-for="SoLuong" class="form-control" type="number" min="1" required />
+                    <span asp-validation-for="SoLuong" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="NgayDieuChuyen" class="form-label">Ngày thực hiện điều chuyển dự kiến</label>
+                <input asp-for="NgayDieuChuyen" class="form-control" type="date" required />
+                <span asp-validation-for="NgayDieuChuyen" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="LyDo" class="form-label">Lý do điều chuyển *</label>
+                <textarea asp-for="LyDo" class="form-control" rows="3" placeholder="Ví dụ: Chuyển 2 máy tính sang phòng Lab hóa học để phục vụ bài thực hành..." required></textarea>
+                <span asp-validation-for="LyDo" class="text-danger"></span>
+            </div>
+
+            <div class="mt-4">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-send"></i> Gửi yêu cầu</button>
+                <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

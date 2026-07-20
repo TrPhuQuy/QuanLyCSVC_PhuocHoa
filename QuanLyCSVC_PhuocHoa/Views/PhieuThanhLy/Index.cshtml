@@ -1,0 +1,87 @@
+@model IEnumerable<PhieuThanhLy>
+@{
+    ViewData["Title"] = "Quản lý Thanh lý Thiết bị";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-file-earmark-x text-danger"></i> Phiếu Thanh lý Thiết bị</h2>
+        <p class="text-muted mb-0">Ghi nhận và quản lý các thiết bị đề nghị thanh lý</p>
+    </div>
+    <a asp-action="Create" class="btn btn-danger"><i class="bi bi-plus-lg"></i> Lập phiếu đề nghị thanh lý</a>
+</div>
+
+<form method="get" class="row g-2 mb-3">
+    <div class="col-md-3"><input name="search" value="@ViewBag.Search" class="form-control" placeholder="Tìm mã phiếu, tên thiết bị..." /></div>
+    <div class="col-md-2">
+        <select name="trangThai" class="form-select">
+            <option value="">-- Trạng thái --</option>
+            @foreach (var tt in ViewBag.TrangThais)
+            {
+                <option value="@tt" selected="@(ViewBag.TrangThai == tt)">@tt</option>
+            }
+        </select>
+    </div>
+    <div class="col-auto"><button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i> Lọc</button></div>
+</form>
+
+<div class="card shadow-sm">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+                <tr>
+                    <th>Mã phiếu</th>
+                    <th>Thiết bị</th>
+                    <th>Ngày đề nghị</th>
+                    <th>Hội đồng</th>
+                    <th>Giá trị còn lại</th>
+                    <th>Số quyết định</th>
+                    <th>Trạng thái</th>
+                    <th style="width: 80px;"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Any())
+                {
+                    <tr><td colspan="8" class="text-center py-4 text-muted">Không có phiếu thanh lý nào.</td></tr>
+                }
+                else
+                {
+                    @foreach (var item in Model)
+                    {
+                        var badgeColor = item.TrangThai == "Đã duyệt" ? "success"
+                                       : item.TrangThai == "Đã hủy" ? "secondary" : "warning";
+                        <tr>
+                            <td><strong>@item.MaThanhLy</strong></td>
+                            <td>
+                                <span class="fw-semibold">@item.ThietBi?.TenTb</span>
+                                <small class="d-block text-muted">@item.ThietBi?.MaTb</small>
+                            </td>
+                            <td>@item.NgayDeNghi.ToString("dd/MM/yyyy")</td>
+                            <td>
+                                @foreach (var tv in item.ThanhVienHoiDong.Take(2))
+                                {
+                                    <span class="badge bg-light text-dark me-1">@tv.NhanVien?.HoTen</span>
+                                }
+                                @if (item.ThanhVienHoiDong.Count > 2)
+                                {
+                                    <small class="text-muted">+@(item.ThanhVienHoiDong.Count - 2) nữa</small>
+                                }
+                            </td>
+                            <td>@(item.GiaTriConLai?.ToString("N0") ?? "-") đ</td>
+                            <td>@(item.SoQuyetDinh ?? "-")</td>
+                            <td><span class="badge bg-@badgeColor">@item.TrangThai</span></td>
+                            <td>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Xem chi tiết"><i class="bi bi-eye"></i></a>
+                                @if (item.TrangThai == "Đề nghị")
+                                {
+                                    <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-warning" title="Sửa"><i class="bi bi-pencil"></i></a>
+                                }
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

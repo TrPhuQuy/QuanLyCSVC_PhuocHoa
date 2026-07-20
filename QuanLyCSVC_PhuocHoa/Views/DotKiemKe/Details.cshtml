@@ -1,0 +1,287 @@
+@model DotKiemKe
+@{
+    ViewData["Title"] = "Chi tiết đợt kiểm kê";
+    var isDangThucHien = Model.TrangThai == "Đang thực hiện";
+    var chiTietList = Model.ChiTietKiemKe.ToList();
+    var thietBis = (List<ThietBi>)ViewBag.ThietBis;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-clipboard-check text-info"></i> Đợt kiểm kê: @Model.MaDotKiemKe</h2>
+        <p class="text-muted mb-0">Xem và cập nhật kết quả kiểm kê tài sản/thiết bị trường học</p>
+    </div>
+    <div>
+        <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+        @if (isDangThucHien && chiTietList.Any())
+        {
+            <form asp-action="Complete" asp-route-id="@Model.Id" method="post" class="d-inline ms-2" onsubmit="return confirm('Bạn có chắc chắn muốn hoàn tất đợt kiểm kê này? Sau khi hoàn tất sẽ không thể sửa kết quả.');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Hoàn tất đợt kiểm kê</button>
+            </form>
+        }
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Thông tin đợt kiểm kê -->
+    <div class="col-md-4">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="bi bi-info-circle text-primary"></i> Thông tin chung</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm table-borderless mb-0">
+                    <tr>
+                        <td class="text-muted" style="width: 130px;">Loại kiểm kê:</td>
+                        <td class="fw-bold">@Model.LoaiKiemKe</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Năm học:</td>
+                        <td><span class="badge bg-secondary">@Model.NamHoc</span></td>
+                    </tr>
+                    @if (Model.HocKy.HasValue)
+                    {
+                        <tr>
+                            <td class="text-muted">Học kỳ:</td>
+                            <td>Học kỳ @Model.HocKy</td>
+                        </tr>
+                    }
+                    <tr>
+                        <td class="text-muted">Người chủ trì:</td>
+                        <td class="fw-bold text-primary">@Model.NguoiChuTri?.HoTen</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Ngày bắt đầu:</td>
+                        <td>@Model.NgayBatDau.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Ngày kết thúc:</td>
+                        <td>@Model.NgayKetThuc.ToString("dd/MM/yyyy")</td>
+                    </tr>
+                    <tr>
+                        <td class="text-muted">Trạng thái:</td>
+                        <td>
+                            <span class="badge bg-@(Model.TrangThai == "Hoàn thành" ? "success" : "primary")">@Model.TrangThai</span>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tóm tắt thống kê -->
+    <div class="col-md-8">
+        <div class="card shadow-sm h-100">
+            <div class="card-header bg-light">
+                <h5 class="card-title mb-0"><i class="bi bi-graph-up text-success"></i> Tóm tắt kiểm kê</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3 text-center">
+                    <div class="col-6 col-sm-3">
+                        <div class="p-3 border rounded bg-light">
+                            <h3 class="mb-1 text-primary">@thietBis.Count</h3>
+                            <small class="text-muted text-uppercase fw-bold">Tổng thiết bị</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <div class="p-3 border rounded bg-light">
+                            <h3 class="mb-1 text-info">@chiTietList.Count</h3>
+                            <small class="text-muted text-uppercase fw-bold">Đã kiểm kê</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <div class="p-3 border rounded bg-light">
+                            <h3 class="mb-1 text-success">@chiTietList.Count(c => c.ChenhLech == 0)</h3>
+                            <small class="text-muted text-uppercase fw-bold">Khớp số lượng</small>
+                        </div>
+                    </div>
+                    <div class="col-6 col-sm-3">
+                        <div class="p-3 border rounded bg-light">
+                            <h3 class="mb-1 text-danger">@chiTietList.Count(c => c.ChenhLech != 0)</h3>
+                            <small class="text-muted text-uppercase fw-bold">Lệch số lượng</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    @if (isDangThucHien)
+                    {
+                        <span>Đang trong quá trình kiểm tra thực tế. Hãy nhập số lượng thiết bị thực tế kiểm kê được vào bảng dưới đây và nhấn <strong>Lưu kết quả</strong>.</span>
+                    }
+                    else
+                    {
+                        <span>Đợt kiểm kê đã <strong>Hoàn thành</strong>. Dữ liệu đã được chốt và không thể chỉnh sửa thêm.</span>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-list-stars text-info"></i> Danh sách thiết bị kiểm kê</h5>
+        <div class="col-md-4">
+            <div class="input-group input-group-sm">
+                <span class="input-group-text"><i class="bi bi-search"></i></span>
+                <input type="text" id="searchDevice" class="form-control" placeholder="Tìm thiết bị hoặc phòng..." />
+            </div>
+        </div>
+    </div>
+    
+    @if (isDangThucHien)
+    {
+        <form asp-action="SaveKiemKe" asp-route-id="@Model.Id" method="post">
+            @Html.AntiForgeryToken()
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0" id="tableKiemKe">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Thiết bị</th>
+                            <th>Phòng / Vị trí</th>
+                            <th style="width: 120px;">SL Sổ sách</th>
+                            <th style="width: 140px;">SL Thực tế</th>
+                            <th style="width: 100px;">Chênh lệch</th>
+                            <th style="width: 160px;">Phân loại</th>
+                            <th>Đề xuất xử lý</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var tb in thietBis)
+                        {
+                            var ct = chiTietList.FirstOrDefault(c => c.ThietBiId == tb.Id);
+                            var slSoSach = ct?.SoLuongSoSach ?? tb.SoLuong;
+                            var slThucTe = ct?.SoLuongThucTe ?? tb.SoLuong;
+                            var chenhLech = slThucTe - slSoSach;
+                            var phanLoai = ct?.PhanLoai ?? "Tốt";
+                            var deXuat = ct?.DeXuatXuLy ?? "Tiếp tục sử dụng";
+
+                            <tr class="device-row">
+                                <td>
+                                    <input type="hidden" name="thietBiIds" value="@tb.Id" />
+                                    <input type="hidden" name="soLuongSoSachs" value="@slSoSach" />
+                                    <div class="fw-bold font-device-name">@tb.TenTb</div>
+                                    <small class="text-muted">Mã: @tb.MaTb</small>
+                                </td>
+                                <td class="font-room-name">
+                                    @tb.Phong?.TenPhong
+                                </td>
+                                <td class="text-center bg-light font-monospace fw-bold sl-so-sach">
+                                    @slSoSach
+                                </td>
+                                <td>
+                                    <input type="number" name="soLuongThucTes" value="@slThucTe" class="form-control form-control-sm text-center font-monospace fw-bold sl-thuc-te" min="0" required />
+                                </td>
+                                <td class="text-center font-monospace fw-bold chenh-lech-col @(chenhLech == 0 ? "text-muted" : chenhLech > 0 ? "text-success" : "text-danger")">
+                                    @(chenhLech > 0 ? "+" + chenhLech : chenhLech.ToString())
+                                </td>
+                                <td>
+                                    <select name="phanLoais" class="form-select form-select-sm">
+                                        <option value="Tốt" selected="@(phanLoai == "Tốt")">Tốt</option>
+                                        <option value="Hao mòn" selected="@(phanLoai == "Hao mòn")">Hao mòn</option>
+                                        <option value="Hư hỏng" selected="@(phanLoai == "Hư hỏng")">Hư hỏng</option>
+                                        <option value="Mất" selected="@(phanLoai == "Mất")">Mất</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <input type="text" name="deXuatXuLys" value="@deXuat" class="form-control form-control-sm" placeholder="VD: Giữ lại, Sửa chữa..." />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+            <div class="card-footer bg-light text-end py-3">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Lưu kết quả kiểm kê</button>
+            </div>
+        </form>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" id="tableKiemKe">
+                <thead class="table-light">
+                    <tr>
+                        <th>Thiết bị</th>
+                        <th>Phòng / Vị trí</th>
+                        <th class="text-center" style="width: 120px;">SL Sổ sách</th>
+                        <th class="text-center" style="width: 120px;">SL Thực tế</th>
+                        <th class="text-center" style="width: 120px;">Chênh lệch</th>
+                        <th style="width: 150px;">Phân loại</th>
+                        <th>Đề xuất xử lý</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (!chiTietList.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">Không có dữ liệu chi tiết kiểm kê nào được lưu.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var ct in chiTietList)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="fw-bold font-device-name">@ct.ThietBi?.TenTb</div>
+                                    <small class="text-muted">Mã: @ct.ThietBi?.MaTb</small>
+                                </td>
+                                <td class="font-room-name">@ct.ThietBi?.Phong?.TenPhong</td>
+                                <td class="text-center font-monospace">@ct.SoLuongSoSach</td>
+                                <td class="text-center font-monospace fw-bold">@ct.SoLuongThucTe</td>
+                                <td class="text-center font-monospace fw-bold @(ct.ChenhLech == 0 ? "text-muted" : ct.ChenhLech > 0 ? "text-success" : "text-danger")">
+                                    @(ct.ChenhLech > 0 ? "+" + ct.ChenhLech : ct.ChenhLech.ToString())
+                                </td>
+                                <td>
+                                    @{
+                                        var badgeColor = ct.PhanLoai == "Tốt" ? "success" : ct.PhanLoai == "Hư hỏng" ? "danger" : "warning";
+                                    }
+                                    <span class="badge bg-@badgeColor">@ct.PhanLoai</span>
+                                </td>
+                                <td>@ct.DeXuatXuLy</td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Tính toán chênh lệch tự động khi thay đổi số lượng thực tế
+            $('.sl-thuc-te').on('input', function() {
+                var row = $(this).closest('tr');
+                var slSoSach = parseInt(row.find('.sl-so-sach').text().trim()) || 0;
+                var slThucTe = parseInt($(this).val()) || 0;
+                var chenhLech = slThucTe - slSoSach;
+                
+                var chenhLechCol = row.find('.chenh-lech-col');
+                chenhLechCol.removeClass('text-muted text-success text-danger');
+                
+                if (chenhLech === 0) {
+                    chenhLechCol.addClass('text-muted').text('0');
+                } else if (chenhLech > 0) {
+                    chenhLechCol.addClass('text-success').text('+' + chenhLech);
+                } else {
+                    chenhLechCol.addClass('text-danger').text(chenhLech);
+                }
+            });
+
+            // Tìm kiếm thiết bị/phòng nhanh
+            $('#searchDevice').on('keyup', function() {
+                var value = $(this).val().toLowerCase();
+                $("#tableKiemKe tbody tr").filter(function() {
+                    var deviceName = $(this).find('.font-device-name').text().toLowerCase();
+                    var roomName = $(this).find('.font-room-name').text().toLowerCase();
+                    $(this).toggle(deviceName.indexOf(value) > -1 || roomName.indexOf(value) > -1);
+                });
+            });
+        });
+    </script>
+}

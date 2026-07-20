@@ -1,0 +1,77 @@
+@model PhieuThanhLy
+@{
+    ViewData["Title"] = "Cập nhật Phiếu đề nghị Thanh lý";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="bi bi-trash text-danger"></i> @ViewData["Title"]</h2>
+        <p class="text-muted mb-0">Phiếu: <strong>@Model.MaThanhLy</strong></p>
+    </div>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+</div>
+
+<div class="card shadow-sm col-md-9">
+    <div class="card-body">
+        <form asp-action="Edit" method="post">
+            @Html.AntiForgeryToken()
+            <input type="hidden" asp-for="Id" />
+            <input type="hidden" asp-for="MaThanhLy" />
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label fw-semibold">Mã phiếu thanh lý</label>
+                    <input class="form-control bg-light" value="@Model.MaThanhLy" disabled />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="TrangThai" class="form-label fw-semibold">Trạng thái</label>
+                    <select asp-for="TrangThai" class="form-select" asp-items="new SelectList(ViewBag.TrangThais)"></select>
+                    <span asp-validation-for="TrangThai" class="text-danger"></span>
+                </div>
+                <div class="col-md-8">
+                    <label asp-for="ThietBiId" class="form-label fw-semibold">Thiết bị đề nghị thanh lý *</label>
+                    <select asp-for="ThietBiId" class="form-select" asp-items="ViewBag.ThietBiId">
+                        <option value="">-- Chọn thiết bị --</option>
+                    </select>
+                    <span asp-validation-for="ThietBiId" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="NgayDeNghi" class="form-label fw-semibold">Ngày đề nghị *</label>
+                    <input asp-for="NgayDeNghi" class="form-control" type="date" required />
+                    <span asp-validation-for="NgayDeNghi" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="NgayQuyetDinh" class="form-label fw-semibold">Ngày quyết định</label>
+                    <input asp-for="NgayQuyetDinh" class="form-control" type="date" />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="SoQuyetDinh" class="form-label fw-semibold">Số quyết định</label>
+                    <input asp-for="SoQuyetDinh" class="form-control" placeholder="QĐ-2025-..." />
+                </div>
+                <div class="col-12">
+                    <label asp-for="LyDo" class="form-label fw-semibold">Lý do đề nghị *</label>
+                    <textarea asp-for="LyDo" class="form-control" rows="2" placeholder="Hư hỏng nặng, không sửa được..."></textarea>
+                    <span asp-validation-for="LyDo" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="GiaTriConLai" class="form-label fw-semibold">Giá trị còn lại (VNĐ)</label>
+                    <div class="input-group">
+                        <input asp-for="GiaTriConLai" class="form-control" type="number" step="1000" min="0" />
+                        <span class="input-group-text">đ</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-4 border-top pt-3">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-save"></i> Lưu thay đổi</button>
+                <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-secondary">Xem chi tiết</a>
+                <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

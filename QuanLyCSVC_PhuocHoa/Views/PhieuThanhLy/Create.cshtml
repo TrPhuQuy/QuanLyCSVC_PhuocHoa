@@ -1,0 +1,88 @@
+@model PhieuThanhLy
+@{
+    ViewData["Title"] = "Lập Phiếu đề nghị Thanh lý";
+    var nhanViens = ViewBag.NhanViens as List<NhanVien> ?? new();
+}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>@ViewData["Title"]</h2>
+</div>
+<div class="alert alert-warning"><i class="bi bi-exclamation-triangle-fill"></i> Khi phiếu được duyệt, thiết bị sẽ bị <strong>xóa khỏi hệ thống hoạt động</strong>.</div>
+<div class="card shadow-sm col-md-9">
+    <div class="card-body">
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+            <input type="hidden" asp-for="MaThanhLy" />
+            <input type="hidden" asp-for="TrangThai" />
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">Mã phiếu</label>
+                    <input class="form-control" value="@Model.MaThanhLy" disabled />
+                </div>
+                <div class="col-md-8">
+                    <label asp-for="ThietBiId" class="form-label">Thiết bị cần thanh lý *</label>
+                    <select asp-for="ThietBiId" class="form-select" asp-items="ViewBag.ThietBiId">
+                        <option value="">-- Chọn thiết bị --</option>
+                    </select>
+                    <span asp-validation-for="ThietBiId" class="text-danger"></span>
+                </div>
+                <div class="col-md-4">
+                    <label asp-for="NgayDeNghi" class="form-label">Ngày đề nghị *</label>
+                    <input asp-for="NgayDeNghi" class="form-control" type="date" required />
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="GiaTriConLai" class="form-label">Giá trị còn lại (đ)</label>
+                    <input asp-for="GiaTriConLai" class="form-control" type="number" step="1000" min="0" placeholder="0" />
+                </div>
+                <div class="col-12">
+                    <label asp-for="LyDo" class="form-label">Lý do đề nghị thanh lý *</label>
+                    <textarea asp-for="LyDo" class="form-control" rows="3" required placeholder="Mô tả chi tiết lý do thanh lý..."></textarea>
+                    <span asp-validation-for="LyDo" class="text-danger"></span>
+                </div>
+                <div class="col-12">
+                    <hr />
+                    <h6 class="fw-semibold">Hội đồng thanh lý</h6>
+                    <div id="hoiDong">
+                        <div class="row g-2 mb-2 hoiDongRow">
+                            <div class="col-md-6">
+                                <select name="thanhVienIds" class="form-select">
+                                    <option value="">-- Chọn nhân viên --</option>
+                                    @foreach (var nv in nhanViens)
+                                    {
+                                        <option value="@nv.Id">@nv.HoTen</option>
+                                    }
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <input name="vaiTros" class="form-control" placeholder="Vai trò (VD: Chủ tịch)" value="Chủ tịch" />
+                            </div>
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-secondary mt-1" onclick="addMember()">
+                        <i class="bi bi-plus"></i> Thêm thành viên
+                    </button>
+                </div>
+            </div>
+            <div class="mt-4">
+                <button type="submit" class="btn btn-danger"><i class="bi bi-check-lg"></i> Gửi đề nghị thanh lý</button>
+                <a asp-action="Index" class="btn btn-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        const nhanViens = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(nhanViens.Select(n => new { n.Id, n.HoTen })));
+        function addMember() {
+            const opts = nhanViens.map(n => `<option value="${n.Id}">${n.HoTen}</option>`).join('');
+            const row = `<div class="row g-2 mb-2 hoiDongRow">
+                <div class="col-md-6"><select name="thanhVienIds" class="form-select"><option value="">-- Chọn nhân viên --</option>${opts}</select></div>
+                <div class="col-md-4"><input name="vaiTros" class="form-control" placeholder="Vai trò" value="Thành viên"/></div>
+                <div class="col-auto"><button type="button" class="btn btn-sm btn-outline-danger" onclick="this.closest('.hoiDongRow').remove()">Xóa</button></div>
+            </div>`;
+            document.getElementById('hoiDong').insertAdjacentHTML('beforeend', row);
+        }
+    </script>
+}
