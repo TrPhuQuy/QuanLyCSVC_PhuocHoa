@@ -1,3 +1,4 @@
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -16,6 +17,69 @@ public class ThietBiController : Controller
 
     public async Task<IActionResult> Index(string? search, int? loaiId, int? phongId, string? tinhTrang)
     {
+        var query = BuildFilterQuery(search, loaiId, phongId, tinhTrang);
+
+        await LoadFilterLists(loaiId, phongId, tinhTrang);
+        ViewBag.Search = search;
+        return View(await query.OrderBy(t => t.MaTb).ToListAsync());
+    }
+
+    // Xuất danh sách thiết bị (đang áp dụng bộ lọc hiện tại) ra file Excel
+    public async Task<IActionResult> ExportExcel(string? search, int? loaiId, int? phongId, string? tinhTrang)
+    {
+        var query = BuildFilterQuery(search, loaiId, phongId, tinhTrang);
+        var items = await query.OrderBy(t => t.MaTb).ToListAsync();
+
+        using var workbook = new XLWorkbook();
+        var sheet = workbook.Worksheets.Add("Danh sách thiết bị");
+
+        string[] headers =
+        [
+            "Mã TB", "Tên thiết bị", "Loại thiết bị", "Hãng SX", "Năm SX",
+            "Ngày mua", "Giá mua", "Số lượng", "ĐVT", "Tình trạng",
+            "Phòng", "Bộ môn", "Ghi chú"
+        ];
+        for (int c = 0; c < headers.Length; c++)
+            sheet.Cell(1, c + 1).Value = headers[c];
+
+        var headerRow = sheet.Row(1);
+        headerRow.Style.Font.Bold = true;
+        headerRow.Style.Fill.BackgroundColor = XLColor.FromHtml("#0d6efd");
+        headerRow.Style.Font.FontColor = XLColor.White;
+
+        int r = 2;
+        foreach (var t in items)
+        {
+            sheet.Cell(r, 1).Value = t.MaTb;
+            sheet.Cell(r, 2).Value = t.TenTb;
+            sheet.Cell(r, 3).Value = t.LoaiThietBi?.TenLoaiTB;
+            sheet.Cell(r, 4).Value = t.HangSanXuat;
+            sheet.Cell(r, 5).Value = t.NamSanXuat;
+            sheet.Cell(r, 6).Value = t.NgayMua?.ToString("dd/MM/yyyy");
+            sheet.Cell(r, 7).Value = t.GiaMua;
+            sheet.Cell(r, 7).Style.NumberFormat.Format = "#,##0";
+            sheet.Cell(r, 8).Value = t.SoLuong;
+            sheet.Cell(r, 9).Value = t.DonViTinh;
+            sheet.Cell(r, 10).Value = EnumHelper.TenTinhTrang(t.TinhTrang);
+            sheet.Cell(r, 11).Value = t.Phong?.TenPhong;
+            sheet.Cell(r, 12).Value = t.BoMon?.TenBoMon;
+            sheet.Cell(r, 13).Value = t.GhiChu;
+            r++;
+        }
+
+        sheet.Columns().AdjustToContents();
+        sheet.SheetView.FreezeRows(1);
+
+        using var stream = new MemoryStream();
+        workbook.SaveAs(stream);
+        stream.Position = 0;
+
+        var fileName = $"DanhSachThietBi_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+        return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+    }
+
+    private IQueryable<Models.Entities.ThietBi> BuildFilterQuery(string? search, int? loaiId, int? phongId, string? tinhTrang)
+    {
         var query = _context.ThietBi
             .Include(t => t.LoaiThietBi)
             .Include(t => t.Phong)
@@ -32,9 +96,7 @@ public class ThietBiController : Controller
         if (!string.IsNullOrWhiteSpace(tinhTrang))
             query = query.Where(t => t.TinhTrang == tinhTrang);
 
-        await LoadFilterLists(loaiId, phongId, tinhTrang);
-        ViewBag.Search = search;
-        return View(await query.OrderBy(t => t.MaTb).ToListAsync());
+        return query;
     }
 
     public async Task<IActionResult> Details(int id)

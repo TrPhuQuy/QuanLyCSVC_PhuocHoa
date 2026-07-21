@@ -1,0 +1,74 @@
+@model QuanLyCSVC_PhuocHoa.Models.ViewModels.NavbarAlertsViewModel
+
+@{
+    var tongCanhBao = Model.SoPhieuChoDuyet + Model.SoQuaHan;
+}
+
+@if (tongCanhBao > 0)
+{
+    <li class="nav-item dropdown">
+        <a class="nav-link position-relative" href="#" data-bs-toggle="dropdown" aria-expanded="false">
+            <i class="bi bi-bell fs-5"></i>
+            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                @(tongCanhBao > 99 ? "99+" : tongCanhBao.ToString())
+            </span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width: 320px; max-height: 420px; overflow-y: auto;">
+            @if (Model.SoPhieuChoDuyet > 0)
+            {
+                <li><h6 class="dropdown-header">Phiếu chờ duyệt</h6></li>
+                @if (Model.SoPhieuMuonChoDuyet > 0)
+                {
+                    <li>
+                        <a class="dropdown-item d-flex justify-content-between" asp-controller="PhieuMuon" asp-action="Index" asp-route-trangThai="Chờ duyệt">
+                            <span><i class="bi bi-calendar-event me-2 text-warning"></i>Phiếu mượn thiết bị</span>
+                            <span class="badge bg-warning text-dark">@Model.SoPhieuMuonChoDuyet</span>
+                        </a>
+                    </li>
+                }
+                @if (Model.SoDieuChuyenChoDuyet > 0)
+                {
+                    <li>
+                        <a class="dropdown-item d-flex justify-content-between" asp-controller="DieuChuyen" asp-action="Index" asp-route-trangThai="Chờ duyệt">
+                            <span><i class="bi bi-arrow-left-right me-2 text-warning"></i>Phiếu điều chuyển</span>
+                            <span class="badge bg-warning text-dark">@Model.SoDieuChuyenChoDuyet</span>
+                        </a>
+                    </li>
+                }
+                @if (Model.SoThanhLyChoDuyet > 0)
+                {
+                    <li>
+                        <a class="dropdown-item d-flex justify-content-between" asp-controller="PhieuThanhLy" asp-action="Index" asp-route-trangThai="Đề nghị">
+                            <span><i class="bi bi-trash me-2 text-warning"></i>Đề nghị thanh lý</span>
+                            <span class="badge bg-warning text-dark">@Model.SoThanhLyChoDuyet</span>
+                        </a>
+                    </li>
+                }
+            }
+
+            @if (Model.SoQuaHan > 0)
+            {
+                if (Model.SoPhieuChoDuyet > 0)
+                {
+                    <li><hr class="dropdown-divider" /></li>
+                }
+                <li><h6 class="dropdown-header text-danger">Mượn thiết bị quá hạn trả</h6></li>
+                @foreach (var pm in Model.DanhSachQuaHan)
+                {
+                    <li>
+                        <a class="dropdown-item" asp-controller="PhieuMuon" asp-action="Details" asp-route-id="@pm.Id">
+                            <div class="d-flex justify-content-between">
+                                <span><i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i>@pm.MaPhieuMuon - @pm.TenGiaoVien</span>
+                                <span class="badge bg-danger">Trễ @pm.SoNgayTre ngày</span>
+                            </div>
+                        </a>
+                    </li>
+                }
+                @if (Model.SoQuaHan >= 10)
+                {
+                    <li><span class="dropdown-item-text small text-muted">Chỉ hiển thị 10 phiếu quá hạn gần nhất...</span></li>
+                }
+            }
+        </ul>
+    </li>
+}

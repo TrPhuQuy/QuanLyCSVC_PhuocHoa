@@ -23,8 +23,9 @@ public partial class DieuChuyen
 
     public int SoLuong { get; set; }
 
+    [Required(ErrorMessage = "Vui lòng nhập lý do điều chuyển.")]
     [StringLength(255)]
-    public string LyDo { get; set; } = null!;
+    public string? LyDo { get; set; }
 
     public int NguoiDeNghiId { get; set; }
 
@@ -34,7 +35,8 @@ public partial class DieuChuyen
 
     public DateTime? NgayDuyet { get; set; }
 
-    public DateOnly NgayDieuChuyen { get; set; }
+    [Required(ErrorMessage = "Vui lòng chọn ngày thực hiện điều chuyển dự kiến.")]
+    public DateOnly? NgayDieuChuyen { get; set; }
 
     [StringLength(50)]
     public string TrangThai { get; set; } = null!;

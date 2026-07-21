@@ -5,6 +5,7 @@ using Microsoft.EntityFrameworkCore;
 using QuanLyCSVC_PhuocHoa.Data;
 using QuanLyCSVC_PhuocHoa.Models;
 using QuanLyCSVC_PhuocHoa.Models.Entities;
+using System.Security.Claims;
 
 namespace QuanLyCSVC_PhuocHoa.Controllers;
 
@@ -14,6 +15,18 @@ public class PhieuBaoTriController : Controller
     private readonly ApplicationDbContext _context;
 
     public PhieuBaoTriController(ApplicationDbContext context) => _context = context;
+
+    private bool IsStaff => User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.NhanVienThietBi);
+
+    /// <summary>
+    /// Lấy nhân viên gắn với tài khoản đang đăng nhập, tra theo UserId (khóa ngoại chuẩn)
+    /// thay vì so khớp Email/UserName — tránh lỗi khi UserName không phải là địa chỉ Email.
+    /// </summary>
+    private Task<NhanVien?> GetCurrentEmployeeAsync()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return _context.NhanVien.FirstOrDefaultAsync(n => n.UserId == userId);
+    }
 
     public async Task<IActionResult> Index(string? search, string? trangThai)
     {
@@ -44,30 +57,46 @@ public class PhieuBaoTriController : Controller
         return item == null ? NotFound() : View(item);
     }
 
-    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Create()
     {
-        await LoadSelectLists();
+        var employee = await GetCurrentEmployeeAsync();
+        if (employee == null)
+        {
+            TempData["Error"] = "Tài khoản của bạn chưa liên kết với thông tin Nhân viên. Vui lòng liên hệ quản trị viên.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        await LoadSelectLists(nguoiGuiId: employee.Id);
+        ViewBag.IsStaff = IsStaff;
+        ViewBag.CurrentEmployeeName = employee.HoTen;
+
         var model = new PhieuBaoTri
         {
             MaBaoTri = $"BT-{DateTime.Now:yyyyMMdd}-{DateTime.Now:HHmmss}",
             NgayGui = DateOnly.FromDateTime(DateTime.Now),
-            TrangThai = "Đang sửa"
+            TrangThai = "Đang sửa",
+            NguoiGuiId = employee.Id
         };
-
-        var userEmail = User.Identity?.Name;
-        var employee = await _context.NhanVien.FirstOrDefaultAsync(n => n.Email == userEmail);
-        if (employee != null)
-            model.NguoiGuiId = employee.Id;
 
         return View(model);
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Create(PhieuBaoTri model)
     {
+        var employee = await GetCurrentEmployeeAsync();
+        if (employee == null)
+        {
+            TempData["Error"] = "Tài khoản của bạn chưa liên kết với thông tin Nhân viên. Vui lòng liên hệ quản trị viên.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Nếu không phải Admin/Nhân viên thiết bị -> luôn ghi nhận Người gửi là chính người đang đăng nhập,
+        // không tin tưởng giá trị NguoiGuiId gửi lên từ form (tránh mạo danh người khác).
+        if (!IsStaff)
+            model.NguoiGuiId = employee.Id;
+
         // Tự động cập nhật tình trạng thiết bị sang "Đang sửa"
         var thietBi = await _context.ThietBi.FindAsync(model.ThietBiId);
         if (thietBi == null)
@@ -79,6 +108,8 @@ public class PhieuBaoTriController : Controller
         if (!ModelState.IsValid)
         {
             await LoadSelectLists(model.ThietBiId, model.NguoiGuiId);
+            ViewBag.IsStaff = IsStaff;
+            ViewBag.CurrentEmployeeName = employee.HoTen;
             return View(model);
         }
 

@@ -21,21 +21,45 @@ public static class DbInitializer
                 await roleManager.CreateAsync(new IdentityRole(role));
         }
 
-        // Cập nhật NormalizedUserName, NormalizedEmail và thiết lập mật khẩu mặc định cho tất cả users có sẵn
+
         var passwordHasher = new PasswordHasher<ApplicationUser>();
         var users = await context.Users.ToListAsync();
+        var anyChanges = false;
         foreach (var user in users)
         {
-            user.NormalizedUserName = user.UserName?.ToUpperInvariant();
-            user.NormalizedEmail = user.Email?.ToUpperInvariant();
+            var userChanged = false;
+
+            if (user.NormalizedUserName != user.UserName?.ToUpperInvariant())
+            {
+                user.NormalizedUserName = user.UserName?.ToUpperInvariant();
+                userChanged = true;
+            }
+            if (user.NormalizedEmail != user.Email?.ToUpperInvariant())
+            {
+                user.NormalizedEmail = user.Email?.ToUpperInvariant();
+                userChanged = true;
+            }
             if (string.IsNullOrEmpty(user.SecurityStamp))
             {
                 user.SecurityStamp = Guid.NewGuid().ToString();
+                userChanged = true;
             }
-            user.PasswordHash = passwordHasher.HashPassword(user, "Admin@123");
-            context.Users.Update(user);
+            // Chỉ set mật khẩu mặc định nếu user chưa từng có mật khẩu (tài khoản mới được đồng bộ từ NhanVien).
+            // KHÔNG ghi đè mật khẩu của user đã tồn tại / đã tự đổi mật khẩu.
+            if (string.IsNullOrEmpty(user.PasswordHash))
+            {
+                user.PasswordHash = passwordHasher.HashPassword(user, "Admin@123");
+                userChanged = true;
+            }
+
+            if (userChanged)
+            {
+                context.Users.Update(user);
+                anyChanges = true;
+            }
         }
-        await context.SaveChangesAsync();
+        if (anyChanges)
+            await context.SaveChangesAsync();
 
         // Gán roles cho tài khoản theo chức vụ
         var nhanViens = await context.NhanVien.Include(n => n.User).ToListAsync();

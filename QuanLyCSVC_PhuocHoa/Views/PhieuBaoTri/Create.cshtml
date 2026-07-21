@@ -1,6 +1,7 @@
 @model PhieuBaoTri
 @{
     ViewData["Title"] = "Ghi nhận Phiếu bảo trì";
+    bool isStaff = ViewBag.IsStaff ?? false;
 }
 <h2 class="mb-4">@ViewData["Title"]</h2>
 <div class="card shadow-sm col-md-8">
@@ -9,7 +10,6 @@
             @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
             <input type="hidden" asp-for="MaBaoTri" />
-            <input type="hidden" asp-for="NguoiGuiId" />
             <input type="hidden" asp-for="TrangThai" />
             <div class="row g-3">
                 <div class="col-12">
@@ -38,11 +38,20 @@
                     <input asp-for="DonViSuaChua" class="form-control" placeholder="Tên công ty / cơ sở sửa chữa..." />
                 </div>
                 <div class="col-md-6">
-                    <label asp-for="NguoiGuiId" class="form-label">Người gửi sửa *</label>
-                    <select asp-for="NguoiGuiId" class="form-select" asp-items="ViewBag.NguoiGuiId">
-                        <option value="">-- Chọn người gửi --</option>
-                    </select>
-                    <span asp-validation-for="NguoiGuiId" class="text-danger"></span>
+                    <label class="form-label">Người gửi sửa *</label>
+                    @if (isStaff)
+                    {
+                        <select asp-for="NguoiGuiId" class="form-select" asp-items="ViewBag.NguoiGuiId">
+                            <option value="">-- Chọn người gửi --</option>
+                        </select>
+                        <span asp-validation-for="NguoiGuiId" class="text-danger"></span>
+                    }
+                    else
+                    {
+                        <input class="form-control" value="@ViewBag.CurrentEmployeeName" disabled />
+                        <input type="hidden" asp-for="NguoiGuiId" />
+                        <div class="form-text">Phiếu sẽ được ghi nhận với người gửi là chính bạn.</div>
+                    }
                 </div>
             </div>
             <div class="mt-4">

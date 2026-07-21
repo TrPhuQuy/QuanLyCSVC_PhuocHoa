@@ -16,10 +16,19 @@ public class DieuChuyenController : Controller
 
     public DieuChuyenController(ApplicationDbContext context) => _context = context;
 
+    /// <summary>
+    /// Lấy nhân viên gắn với tài khoản đang đăng nhập, tra theo UserId (khóa ngoại chuẩn)
+    /// thay vì so khớp Email/UserName — tránh lỗi khi UserName không phải là địa chỉ Email.
+    /// </summary>
+    private Task<NhanVien?> GetCurrentEmployeeAsync()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        return _context.NhanVien.FirstOrDefaultAsync(n => n.UserId == userId);
+    }
+
     public async Task<IActionResult> Index(string? search, string? trangThai)
     {
-        var userEmail = User.Identity?.Name;
-        var employee = await _context.NhanVien.FirstOrDefaultAsync(n => n.Email == userEmail);
+        var employee = await GetCurrentEmployeeAsync();
 
         var query = _context.DieuChuyen
             .Include(d => d.ThietBi)
@@ -68,8 +77,7 @@ public class DieuChuyenController : Controller
 
     public async Task<IActionResult> Create()
     {
-        var userEmail = User.Identity?.Name;
-        var employee = await _context.NhanVien.FirstOrDefaultAsync(n => n.Email == userEmail);
+        var employee = await GetCurrentEmployeeAsync();
         if (employee == null)
         {
             TempData["Error"] = "Tài khoản của bạn chưa liên kết với thông tin Nhân viên.";
@@ -144,8 +152,7 @@ public class DieuChuyenController : Controller
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        var userEmail = User.Identity?.Name;
-        var employee = await _context.NhanVien.FirstOrDefaultAsync(n => n.Email == userEmail);
+        var employee = await GetCurrentEmployeeAsync();
         if (employee == null)
         {
             TempData["Error"] = "Tài khoản người duyệt chưa liên kết với Nhân viên.";
@@ -232,8 +239,7 @@ public class DieuChuyenController : Controller
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        var userEmail = User.Identity?.Name;
-        var employee = await _context.NhanVien.FirstOrDefaultAsync(n => n.Email == userEmail);
+        var employee = await GetCurrentEmployeeAsync();
         if (employee == null)
         {
             TempData["Error"] = "Tài khoản người duyệt chưa liên kết với Nhân viên.";

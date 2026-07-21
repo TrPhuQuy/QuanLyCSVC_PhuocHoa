@@ -5,10 +5,20 @@
 
 <div class="page-header d-flex justify-content-between align-items-center">
     <h2><i class="bi bi-pc-display text-primary"></i> Danh sách thiết bị</h2>
-    @if (User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.NhanVienThietBi))
-    {
-        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm thiết bị</a>
-    }
+    <div class="d-flex gap-2">
+        <a asp-action="ExportExcel"
+           asp-route-search="@ViewBag.Search"
+           asp-route-loaiId="@Context.Request.Query["loaiId"]"
+           asp-route-phongId="@Context.Request.Query["phongId"]"
+           asp-route-tinhTrang="@Context.Request.Query["tinhTrang"]"
+           class="btn btn-outline-success">
+            <i class="bi bi-file-earmark-excel"></i> Xuất Excel
+        </a>
+        @if (User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.NhanVienThietBi))
+        {
+            <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm thiết bị</a>
+        }
+    </div>
 </div>
 
 <form method="get" class="row g-2 mb-3">
@@ -24,8 +34,14 @@
         <table class="table table-hover mb-0">
             <thead class="table-light">
                 <tr>
-                    <th>Mã TB</th><th>Tên thiết bị</th><th>Loại</th><th>Phòng</th>
-                    <th>SL</th><th>Giá mua</th><th>Tình trạng</th><th></th>
+                    <th>Mã TB</th>
+                    <th>Tên thiết bị</th>
+                    <th>Loại</th>
+                    <th>Phòng</th>
+                    <th>SL</th>
+                    <th>Giá mua</th>
+                    <th>Tình trạng</th>
+                    <th></th>
                 </tr>
             </thead>
             <tbody>
@@ -52,3 +68,4 @@
         </table>
     </div>
 </div>
+    

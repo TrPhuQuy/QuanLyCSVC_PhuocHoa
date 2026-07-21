@@ -44,6 +44,11 @@ body {
     border-bottom: 1px solid rgba(255,255,255,.12) !important;
     backdrop-filter: blur(8px);
     padding: 0.6rem 1rem;
+    /* backdrop-filter tạo stacking context riêng cho navbar, làm "nhốt" z-index của
+       .dropdown-menu bên trong. Nếu không nâng chính navbar lên trên bằng position + z-index,
+       nội dung phía dưới (vd. các thẻ Bảng điều khiển) sẽ vẽ đè lên menu dropdown đang mở. */
+    position: relative;
+    z-index: 1030;
 }
 
 .navbar-brand {

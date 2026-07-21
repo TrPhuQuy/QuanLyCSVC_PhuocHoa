@@ -49,12 +49,12 @@
                     </div>
                     <div class="col-md-6">
                         <small class="text-muted d-block">Ngày thực hiện dự kiến</small>
-                        <span class="fs-6 fw-semibold">@Model.NgayDieuChuyen.ToString("dd/MM/yyyy")</span>
+                        <span class="fs-6 fw-semibold">@(Model.NgayDieuChuyen?.ToString("dd/MM/yyyy") ?? "Chưa xác định")</span>
                     </div>
 
                     <div class="col-12">
                         <small class="text-muted d-block">Lý do điều chuyển</small>
-                        <div class="bg-light p-3 rounded border text-dark mt-1" style="white-space: pre-wrap;">@Model.LyDo</div>
+                        <div class="bg-light p-3 rounded border text-dark mt-1" style="white-space: pre-wrap;">@(string.IsNullOrWhiteSpace(Model.LyDo) ? "(Không có)" : Model.LyDo)</div>
                     </div>
                 </div>
             </div>
