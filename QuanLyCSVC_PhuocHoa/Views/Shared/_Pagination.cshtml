@@ -1,0 +1,106 @@
+@model QuanLyCSVC_PhuocHoa.Helpers.IPagination
+@{
+    if (Model == null || Model.TotalCount == 0) return;
+
+    var startRecord = (Model.PageIndex - 1) * Model.PageSize + 1;
+    var endRecord = Math.Min(Model.PageIndex * Model.PageSize, Model.TotalCount);
+
+    string GetPageUrl(int pageNumber)
+    {
+        var dict = new Dictionary<string, string>();
+        foreach (var key in Context.Request.Query.Keys)
+        {
+            if (!string.Equals(key, "page", StringComparison.OrdinalIgnoreCase) && !string.IsNullOrWhiteSpace(key))
+            {
+                dict[key] = Context.Request.Query[key]!;
+            }
+        }
+        dict["page"] = pageNumber.ToString();
+        return "?" + string.Join("&", dict.Select(kv => $"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}"));
+    }
+
+    var startPage = Math.Max(1, Model.PageIndex - 2);
+    var endPage = Math.Min(Model.TotalPages, Model.PageIndex + 2);
+
+    if (endPage - startPage < 4)
+    {
+        if (startPage == 1)
+        {
+            endPage = Math.Min(Model.TotalPages, startPage + 4);
+        }
+        else if (endPage == Model.TotalPages)
+        {
+            startPage = Math.Max(1, endPage - 4);
+        }
+    }
+}
+
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 mt-3 pt-2">
+    <div class="text-muted small">
+        Hiển thị <strong>@startRecord</strong> - <strong>@endRecord</strong> trên tổng số <strong>@Model.TotalCount</strong> bản ghi
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <nav aria-label="Page navigation">
+            <ul class="pagination pagination-sm mb-0">
+                <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                    <a class="page-link" href="@(Model.HasPreviousPage ? GetPageUrl(1) : "#")" title="Trang đầu">
+                        <i class="bi bi-chevron-double-left"></i>
+                    </a>
+                </li>
+                <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                    <a class="page-link" href="@(Model.HasPreviousPage ? GetPageUrl(Model.PageIndex - 1) : "#")" title="Trang trước">
+                        <i class="bi bi-chevron-left"></i>
+                    </a>
+                </li>
+
+                @if (startPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link" href="@GetPageUrl(1)">1</a>
+                    </li>
+                    @if (startPage > 2)
+                    {
+                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                    }
+                }
+
+                @for (var p = startPage; p <= endPage; p++)
+                {
+                    <li class="page-item @(p == Model.PageIndex ? "active" : "")">
+                        @if (p == Model.PageIndex)
+                        {
+                            <span class="page-link fw-bold">@p</span>
+                        }
+                        else
+                        {
+                            <a class="page-link" href="@GetPageUrl(p)">@p</a>
+                        }
+                    </li>
+                }
+
+                @if (endPage < Model.TotalPages)
+                {
+                    @if (endPage < Model.TotalPages - 1)
+                    {
+                        <li class="page-item disabled"><span class="page-link">&hellip;</span></li>
+                    }
+                    <li class="page-item">
+                        <a class="page-link" href="@GetPageUrl(Model.TotalPages)">@Model.TotalPages</a>
+                    </li>
+                }
+
+                <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                    <a class="page-link" href="@(Model.HasNextPage ? GetPageUrl(Model.PageIndex + 1) : "#")" title="Trang sau">
+                        <i class="bi bi-chevron-right"></i>
+                    </a>
+                </li>
+                <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                    <a class="page-link" href="@(Model.HasNextPage ? GetPageUrl(Model.TotalPages) : "#")" title="Trang cuối">
+                        <i class="bi bi-chevron-double-right"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    }
+</div>

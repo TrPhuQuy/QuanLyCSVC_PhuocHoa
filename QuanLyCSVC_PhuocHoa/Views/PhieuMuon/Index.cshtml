@@ -1,54 +1,69 @@
-@model IEnumerable<PhieuMuon>
+@model PaginatedList<PhieuMuon>
 @{
     ViewData["Title"] = "Mượn trả Thiết bị";
 }
 
-<div class="page-header d-flex justify-content-between align-items-center mb-4">
+<div class="page-header-box d-flex flex-wrap justify-content-between align-items-center gap-3">
     <div>
-        <h2><i class="bi bi-clock-history text-primary"></i> Đăng ký Mượn trả Thiết bị</h2>
-        <p class="text-muted mb-0">Quản lý việc mượn sử dụng thiết bị dạy học của giáo viên</p>
+        <h2 class="d-flex align-items-center gap-2">
+            <i class="bi bi-calendar-event text-primary"></i>
+            <span>Quản lý Mượn trả Thiết bị</span>
+            <span class="badge bg-primary fs-6 fw-bold">@Model.TotalItems</span>
+        </h2>
+        <p>Theo dõi tiến độ đăng ký mượn, xét duyệt và hoàn trả thiết bị thực hành của giáo viên</p>
     </div>
-    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Đăng ký mượn thiết bị</a>
+    <div class="d-flex gap-2">
+        <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Đăng ký mượn thiết bị</a>
+    </div>
 </div>
 
-<form method="get" class="row g-2 mb-3">
-    <div class="col-md-3">
-        <input name="search" value="@ViewBag.Search" class="form-control" placeholder="Mã phiếu, tên giáo viên..." />
-    </div>
-    <div class="col-md-2">
-        <select name="trangThai" class="form-select">
-            <option value="">-- Trạng thái --</option>
-            @foreach (var tt in ViewBag.TrangThais)
-            {
-                <option value="@tt" selected="@(ViewBag.TrangThai == tt)">@tt</option>
-            }
-        </select>
-    </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i> Lọc</button>
-    </div>
-</form>
+<div class="filter-card">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-4">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                <input name="search" value="@ViewBag.Search" class="form-control border-start-0" placeholder="Mã phiếu, tên giáo viên..." />
+            </div>
+        </div>
+        <div class="col-md-3">
+            <select name="trangThai" class="form-select">
+                <option value="">-- Tất cả trạng thái --</option>
+                @foreach (var tt in ViewBag.TrangThais)
+                {
+                    <option value="@tt" selected="@(ViewBag.TrangThai == tt)">@tt</option>
+                }
+            </select>
+        </div>
+        <div class="col-auto d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-funnel"></i> Lọc dữ liệu</button>
+            <a asp-action="Index" class="btn btn-outline-dark" title="Đặt lại bộ lọc"><i class="bi bi-arrow-counterclockwise"></i></a>
+        </div>
+    </form>
+</div>
 
-<div class="card shadow-sm">
+<div class="card shadow-sm border-0">
     <div class="table-responsive">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
                 <tr>
-                    <th>Mã phiếu</th>
+                    <th style="width: 130px;">Mã phiếu</th>
                     <th>Giáo viên mượn</th>
                     <th>Ngày đăng ký</th>
                     <th>Ngày mượn dự kiến</th>
                     <th>Ngày trả dự kiến</th>
                     <th>Ngày trả thực tế</th>
-                    <th>Trạng thái</th>
-                    <th style="width: 100px;"></th>
+                    <th class="text-center">Trạng thái</th>
+                    <th style="width: 110px;" class="text-end">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
                 @if (!Model.Any())
                 {
                     <tr>
-                        <td colspan="8" class="text-center py-4 text-muted">Không tìm thấy phiếu mượn nào.</td>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox display-6 d-block mb-2 text-secondary"></i>
+                            Không tìm thấy phiếu mượn nào phù hợp với bộ lọc.
+                        </td>
                     </tr>
                 }
                 else
@@ -56,17 +71,25 @@
                     @foreach (var item in Model)
                     {
                         <tr>
-                            <td><strong>@item.MaPhieuMuon</strong></td>
-                            <td>@item.GiaoVien?.HoTen</td>
-                            <td>@item.NgayDangKy.ToString("dd/MM/yyyy")</td>
-                            <td>@item.NgayMuonDuKien.ToString("dd/MM/yyyy")</td>
-                            <td>@item.NgayTraDuKien.ToString("dd/MM/yyyy")</td>
-                            <td>@(item.NgayTraThucTe?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
-                            <td>
-                                <span class="badge bg-@EnumHelper.BadgeTrangThai(item.TrangThai)">@EnumHelper.TenTrangThai(item.TrangThai)</span>
+                            <td><span class="code-tag text-primary">@item.MaPhieuMuon</span></td>
+                            <td><div class="fw-bold text-dark">@item.GiaoVien?.HoTen</div></td>
+                            <td class="font-monospace">@item.NgayDangKy.ToString("dd/MM/yyyy")</td>
+                            <td class="font-monospace">@item.NgayMuonDuKien.ToString("dd/MM/yyyy")</td>
+                            <td class="font-monospace">@item.NgayTraDuKien.ToString("dd/MM/yyyy")</td>
+                            <td class="font-monospace">@(item.NgayTraThucTe?.ToString("dd/MM/yyyy HH:mm") ?? "-")</td>
+                            <td class="text-center">
+                                @{
+                                    var badgeColor = EnumHelper.BadgeTrangThai(item.TrangThai);
+                                    var dotType = badgeColor == "success" ? "active" : (badgeColor == "danger" ? "danger" : "warning");
+                                }
+                                <span class="badge bg-@badgeColor">
+                                    <span class="status-dot @dotType"></span>@EnumHelper.TenTrangThai(item.TrangThai)
+                                </span>
                             </td>
                             <td class="text-end">
-                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-eye"></i> Chi tiết</a>
+                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Xem chi tiết phiếu">
+                                    <i class="bi bi-eye"></i> Chi tiết
+                                </a>
                             </td>
                         </tr>
                     }
@@ -75,3 +98,5 @@
         </table>
     </div>
 </div>
+
+<partial name="_Pagination" model="Model" />

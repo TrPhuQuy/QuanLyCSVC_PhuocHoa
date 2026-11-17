@@ -1,46 +1,78 @@
 @model QuanLyCSVC_PhuocHoa.Models.ViewModels.NavbarAlertsViewModel
 
 @{
-    var tongCanhBao = Model.SoPhieuChoDuyet + Model.SoQuaHan;
+    var tongCanhBao = Model.TongCanhBao;
 }
 
-@if (tongCanhBao > 0)
-{
-    <li class="nav-item dropdown">
-        <a class="nav-link position-relative" href="#" data-bs-toggle="dropdown" aria-expanded="false">
-            <i class="bi bi-bell fs-5"></i>
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+<li class="nav-item dropdown">
+    <a class="nav-alert-btn nav-link position-relative d-inline-flex align-items-center justify-content-center" href="#" data-bs-toggle="dropdown" aria-expanded="false" title="Thông báo hệ thống">
+        <i class="bi bi-bell fs-5"></i>
+        @if (tongCanhBao > 0)
+        {
+            <span class="nav-alert-badge bg-danger text-white">
                 @(tongCanhBao > 99 ? "99+" : tongCanhBao.ToString())
             </span>
-        </a>
-        <ul class="dropdown-menu dropdown-menu-end shadow" style="min-width: 320px; max-height: 420px; overflow-y: auto;">
-            @if (Model.SoPhieuChoDuyet > 0)
+        }
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end shadow-xl border-0 p-0" style="min-width: 340px; max-height: 460px; overflow-y: auto; border-radius: 14px;">
+        <li class="p-3 bg-light border-bottom d-flex justify-content-between align-items-center rounded-top">
+            <span class="fw-bold text-dark"><i class="bi bi-bell-fill text-primary me-2"></i>Thông báo hệ thống</span>
+            @if (tongCanhBao > 0)
             {
-                <li><h6 class="dropdown-header">Phiếu chờ duyệt</h6></li>
+                <span class="badge bg-danger">@tongCanhBao việc cần xử lý</span>
+            }
+            else
+            {
+                <span class="badge bg-success">Hệ thống bình thường</span>
+            }
+        </li>
+
+        @if (tongCanhBao == 0)
+        {
+            <li class="p-4 text-center text-muted">
+                <i class="bi bi-check2-circle text-success display-6 d-block mb-2"></i>
+                <div class="fw-semibold small">Tuyệt vời! Không có cảnh báo tồn đọng.</div>
+                <small class="text-muted">Mọi yêu cầu mượn trả và bảo trì đều đã được xử lý.</small>
+            </li>
+        }
+        else
+        {
+            @if (Model.SoPhieuChoDuyet > 0 || Model.SoPhieuBaoTriDangSua > 0)
+            {
+                <li class="px-3 pt-2 pb-1"><small class="text-uppercase fw-bold text-muted" style="font-size: 0.72rem; letter-spacing: 0.05em;">Cần phê duyệt &amp; xử lý</small></li>
                 @if (Model.SoPhieuMuonChoDuyet > 0)
                 {
                     <li>
-                        <a class="dropdown-item d-flex justify-content-between" asp-controller="PhieuMuon" asp-action="Index" asp-route-trangThai="Chờ duyệt">
+                        <a class="dropdown-item d-flex justify-content-between align-items-center py-2 px-3" asp-controller="PhieuMuon" asp-action="Index" asp-route-trangThai="Chờ duyệt">
                             <span><i class="bi bi-calendar-event me-2 text-warning"></i>Phiếu mượn thiết bị</span>
-                            <span class="badge bg-warning text-dark">@Model.SoPhieuMuonChoDuyet</span>
+                            <span class="badge bg-warning text-dark">@Model.SoPhieuMuonChoDuyet chờ duyệt</span>
                         </a>
                     </li>
                 }
                 @if (Model.SoDieuChuyenChoDuyet > 0)
                 {
                     <li>
-                        <a class="dropdown-item d-flex justify-content-between" asp-controller="DieuChuyen" asp-action="Index" asp-route-trangThai="Chờ duyệt">
-                            <span><i class="bi bi-arrow-left-right me-2 text-warning"></i>Phiếu điều chuyển</span>
-                            <span class="badge bg-warning text-dark">@Model.SoDieuChuyenChoDuyet</span>
+                        <a class="dropdown-item d-flex justify-content-between align-items-center py-2 px-3" asp-controller="DieuChuyen" asp-action="Index" asp-route-trangThai="Chờ duyệt">
+                            <span><i class="bi bi-arrow-left-right me-2 text-info"></i>Phiếu điều chuyển</span>
+                            <span class="badge bg-warning text-dark">@Model.SoDieuChuyenChoDuyet chờ duyệt</span>
                         </a>
                     </li>
                 }
                 @if (Model.SoThanhLyChoDuyet > 0)
                 {
                     <li>
-                        <a class="dropdown-item d-flex justify-content-between" asp-controller="PhieuThanhLy" asp-action="Index" asp-route-trangThai="Đề nghị">
-                            <span><i class="bi bi-trash me-2 text-warning"></i>Đề nghị thanh lý</span>
-                            <span class="badge bg-warning text-dark">@Model.SoThanhLyChoDuyet</span>
+                        <a class="dropdown-item d-flex justify-content-between align-items-center py-2 px-3" asp-controller="PhieuThanhLy" asp-action="Index" asp-route-trangThai="Đề nghị">
+                            <span><i class="bi bi-trash me-2 text-danger"></i>Đề nghị thanh lý</span>
+                            <span class="badge bg-warning text-dark">@Model.SoThanhLyChoDuyet đề nghị</span>
+                        </a>
+                    </li>
+                }
+                @if (Model.SoPhieuBaoTriDangSua > 0)
+                {
+                    <li>
+                        <a class="dropdown-item d-flex justify-content-between align-items-center py-2 px-3" asp-controller="PhieuBaoTri" asp-action="Index" asp-route-trangThai="Đang sửa">
+                            <span><i class="bi bi-tools me-2 text-danger"></i>Thiết bị đang bảo trì</span>
+                            <span class="badge bg-danger">@Model.SoPhieuBaoTriDangSua máy</span>
                         </a>
                     </li>
                 }
@@ -48,27 +80,27 @@
 
             @if (Model.SoQuaHan > 0)
             {
-                if (Model.SoPhieuChoDuyet > 0)
-                {
-                    <li><hr class="dropdown-divider" /></li>
-                }
-                <li><h6 class="dropdown-header text-danger">Mượn thiết bị quá hạn trả</h6></li>
+                <li><hr class="dropdown-divider my-1" /></li>
+                <li class="px-3 pt-2 pb-1"><small class="text-uppercase fw-bold text-danger" style="font-size: 0.72rem; letter-spacing: 0.05em;"><i class="bi bi-exclamation-circle me-1"></i>Mượn quá hạn chưa hoàn trả</small></li>
                 @foreach (var pm in Model.DanhSachQuaHan)
                 {
                     <li>
-                        <a class="dropdown-item" asp-controller="PhieuMuon" asp-action="Details" asp-route-id="@pm.Id">
-                            <div class="d-flex justify-content-between">
-                                <span><i class="bi bi-exclamation-triangle-fill me-2 text-danger"></i>@pm.MaPhieuMuon - @pm.TenGiaoVien</span>
+                        <a class="dropdown-item py-2 px-3" asp-controller="PhieuMuon" asp-action="Details" asp-route-id="@pm.Id">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="text-truncate" style="max-width: 200px;">
+                                    <i class="bi bi-person-exclamation me-1 text-danger"></i>@pm.TenGiaoVien
+                                </span>
                                 <span class="badge bg-danger">Trễ @pm.SoNgayTre ngày</span>
                             </div>
+                            <small class="text-muted d-block font-monospace" style="font-size: 0.75rem;">Mã phiếu: @pm.MaPhieuMuon</small>
                         </a>
                     </li>
                 }
                 @if (Model.SoQuaHan >= 10)
                 {
-                    <li><span class="dropdown-item-text small text-muted">Chỉ hiển thị 10 phiếu quá hạn gần nhất...</span></li>
+                    <li><span class="dropdown-item-text small text-muted text-center d-block py-2">Hiển thị 10 phiếu quá hạn gần nhất</span></li>
                 }
             }
-        </ul>
-    </li>
-}
+        }
+    </ul>
+</li>

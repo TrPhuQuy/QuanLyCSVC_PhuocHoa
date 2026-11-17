@@ -1,70 +1,122 @@
-@model IEnumerable<Phong>
+@model PaginatedList<Phong>
 @{
     ViewData["Title"] = "Quản lý phòng";
 }
 
-<div class="page-header d-flex justify-content-between align-items-center">
-    <h2><i class="bi bi-door-open text-primary"></i> Danh sách phòng</h2>
-    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm phòng</a>
+<div class="page-header-box d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div>
+        <h2 class="d-flex align-items-center gap-2">
+            <i class="bi bi-door-open text-primary"></i>
+            <span>Phòng học &amp; Khu chức năng</span>
+            <span class="badge bg-primary fs-6 fw-bold">@Model.TotalItems</span>
+        </h2>
+        <p>Danh sách các phòng học văn hóa, phòng bộ môn thí nghiệm và khu hiệu bộ trường</p>
+    </div>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-dark" data-bs-toggle="modal" data-bs-target="#qrScannerModal">
+            <i class="bi bi-qr-code-scan"></i> Quét mã phòng
+        </button>
+        @if (User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.NhanVienThietBi))
+        {
+            <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm phòng mới</a>
+        }
+    </div>
 </div>
 
-<form method="get" class="row g-2 mb-3">
-    <div class="col-md-4">
-        <input name="search" value="@ViewBag.Search" class="form-control" placeholder="Tìm theo mã, tên phòng..." />
-    </div>
-    <div class="col-auto">
-        <button type="submit" class="btn btn-outline-primary"><i class="bi bi-search"></i> Tìm kiếm</button>
-    </div>
-</form>
+<div class="filter-card">
+    <form method="get" class="row g-2 align-items-center">
+        <div class="col-md-5">
+            <div class="input-group">
+                <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-search"></i></span>
+                <input name="search" value="@ViewBag.Search" class="form-control border-start-0" placeholder="Tìm theo mã phòng, tên phòng học..." />
+            </div>
+        </div>
+        <div class="col-auto d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-search"></i> Tìm kiếm</button>
+            <a asp-action="Index" class="btn btn-outline-dark" title="Đặt lại bộ lọc"><i class="bi bi-arrow-counterclockwise"></i></a>
+        </div>
+    </form>
+</div>
 
-<div class="card shadow-sm">
+<div class="card shadow-sm border-0">
     <div class="table-responsive">
-        <table class="table table-hover mb-0">
-            <thead class="table-light">
+        <table class="table table-hover align-middle mb-0">
+            <thead>
                 <tr>
-                    <th>Mã phòng</th>
-                    <th>Tên phòng</th>
+                    <th style="width: 120px;">Mã phòng</th>
+                    <th>Tên phòng học</th>
                     <th>Loại phòng</th>
-                    <th>Vị trí</th>
+                    <th>Vị trí khu vực</th>
                     <th>Người phụ trách</th>
-                    <th>Sức chứa</th>
-                    <th>Trạng thái</th>
-                    <th></th>
+                    <th class="text-center">Sức chứa</th>
+                    <th class="text-center">Trạng thái</th>
+                    <th style="width: 130px;" class="text-end">Thao tác</th>
                 </tr>
             </thead>
             <tbody>
-                @foreach (var item in Model)
+                @if (!Model.Any())
                 {
                     <tr>
-                        <td><strong>@item.MaPhong</strong></td>
-                        <td>@item.TenPhong</td>
-                        <td>@(item.LoaiPhong?.TenLoaiPhong ?? "-")</td>
-                        <td>@item.ViTri</td>
-                        <td>@(item.NguoiPhuTrach?.HoTen ?? "-")</td>
-                        <td>@(item.SucChua?.ToString() ?? "-")</td>
-                        <td>
-                            @{
-                                var badgeClass = item.TrangThai switch
-                                {
-                                    "Đang sử dụng" => "success",
-                                    "Đang sửa chữa" => "warning",
-                                    "Tạm đóng cửa" => "danger",
-                                    _ => "secondary"
-                                };
-                            }
-                            <span class="badge bg-@badgeClass">@item.TrangThai</span>
-                        </td>
-                        <td class="text-end text-nowrap">
-                            <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info"><i class="bi bi-eye"></i></a>
-                            <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
-                            <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Xóa phòng này?');">
-                                @Html.AntiForgeryToken()
-                                <button type="submit" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
-                            </form>
+                        <td colspan="8" class="text-center py-5 text-muted">
+                            <i class="bi bi-inbox display-6 d-block mb-2 text-secondary"></i>
+                            Không tìm thấy phòng nào phù hợp với từ khóa.
                         </td>
                     </tr>
+                }
+                else
+                {
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td><span class="code-tag text-primary">@item.MaPhong</span></td>
+                            <td><div class="fw-bold text-dark">@item.TenPhong</div></td>
+                            <td><span class="badge bg-light text-dark border">@(item.LoaiPhong?.TenLoaiPhong ?? "-")</span></td>
+                            <td><i class="bi bi-geo-alt text-muted me-1"></i>@item.ViTri</td>
+                            <td>@(item.NguoiPhuTrach?.HoTen ?? "-")</td>
+                            <td class="text-center font-monospace">@(item.SucChua?.ToString() ?? "-") chỗ</td>
+                            <td class="text-center">
+                                @{
+                                    var (badgeClass, dotClass) = item.TrangThai switch
+                                    {
+                                        "Đang sử dụng" => ("success", "active"),
+                                        "Đang sửa chữa" => ("warning", "warning"),
+                                        "Tạm đóng cửa" => ("danger", "danger"),
+                                        _ => ("secondary", "")
+                                    };
+                                }
+                                <span class="badge bg-@badgeClass">
+                                    @if (!string.IsNullOrEmpty(dotClass))
+                                    {
+                                        <span class="status-dot @dotClass"></span>
+                                    }
+                                    @item.TrangThai
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <div class="table-actions justify-content-end">
+                                    <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info" title="Xem chi tiết thiết bị trong phòng">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    @if (User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.NhanVienThietBi))
+                                    {
+                                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary" title="Chỉnh sửa thông tin phòng">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post" class="d-inline" onsubmit="return confirm('Bạn có chắc chắn muốn xóa phòng này?');">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Xóa phòng">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </form>
+                                    }
+                                </div>
+                            </td>
+                        </tr>
+                    }
                 }
             </tbody>
         </table>
     </div>
 </div>
+
+<partial name="_Pagination" model="Model" />

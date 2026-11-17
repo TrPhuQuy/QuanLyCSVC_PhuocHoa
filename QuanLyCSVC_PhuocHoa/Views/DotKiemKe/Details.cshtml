@@ -13,11 +13,21 @@
     </div>
     <div>
         <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+        <a asp-action="PrintC53" asp-route-id="@Model.Id" target="_blank" class="btn btn-outline-dark ms-2">
+            <i class="bi bi-printer"></i> In Biên bản C53-HD
+        </a>
         @if (isDangThucHien && chiTietList.Any())
         {
             <form asp-action="Complete" asp-route-id="@Model.Id" method="post" class="d-inline ms-2" onsubmit="return confirm('Bạn có chắc chắn muốn hoàn tất đợt kiểm kê này? Sau khi hoàn tất sẽ không thể sửa kết quả.');">
                 @Html.AntiForgeryToken()
                 <button type="submit" class="btn btn-success"><i class="bi bi-check-circle"></i> Hoàn tất đợt kiểm kê</button>
+            </form>
+        }
+        @if (!isDangThucHien && User.IsInRole(AppRoles.Admin) && chiTietList.Any(ct => ct.ChenhLech != 0))
+        {
+            <form asp-action="ApplyAdjustment" asp-route-id="@Model.Id" method="post" class="d-inline ms-2" onsubmit="return confirm('Hệ thống sẽ tự động cập nhật số lượng tồn kho theo số lượng thực tế kiểm kê được cho các thiết bị có chênh lệch. Bạn có chắc chắn muốn thực hiện?');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn btn-warning"><i class="bi bi-arrow-repeat"></i> Cân đối số lượng thực tế</button>
             </form>
         }
     </div>

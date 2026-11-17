@@ -3,17 +3,18 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyCSVC_PhuocHoa.Data;
 using QuanLyCSVC_PhuocHoa.Models.Entities;
+using QuanLyCSVC_PhuocHoa.Helpers;
 
 namespace QuanLyCSVC_PhuocHoa.Controllers;
 
-[Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
+[Authorize]
 public class NhaCungCapController : Controller
 {
     private readonly ApplicationDbContext _context;
 
     public NhaCungCapController(ApplicationDbContext context) => _context = context;
 
-    public async Task<IActionResult> Index(string? search)
+    public async Task<IActionResult> Index(string? search, int page = 1)
     {
         var query = _context.NhaCungCap.AsQueryable();
 
@@ -21,13 +22,16 @@ public class NhaCungCapController : Controller
             query = query.Where(n => n.TenNCC.Contains(search) || n.MaNCC.Contains(search) || (n.NguoiDaiDien != null && n.NguoiDaiDien.Contains(search)));
 
         ViewBag.Search = search;
-        return View(await query.OrderBy(n => n.MaNCC).ToListAsync());
+        var pagedItems = await PaginatedList<NhaCungCap>.CreateAsync(query.OrderBy(n => n.MaNCC), page, 15);
+        return View(pagedItems);
     }
 
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public IActionResult Create() => View(new NhaCungCap { TrangThai = true });
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Create(NhaCungCap model)
     {
         if (await _context.NhaCungCap.AnyAsync(n => n.MaNCC == model.MaNCC))
@@ -41,6 +45,7 @@ public class NhaCungCapController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Edit(int id)
     {
         var item = await _context.NhaCungCap.FindAsync(id);
@@ -49,6 +54,7 @@ public class NhaCungCapController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Edit(int id, NhaCungCap model)
     {
         if (id != model.Id) return NotFound();
@@ -66,6 +72,7 @@ public class NhaCungCapController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Delete(int id)
     {
         var item = await _context.NhaCungCap
@@ -80,9 +87,16 @@ public class NhaCungCapController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        _context.NhaCungCap.Remove(item);
-        await _context.SaveChangesAsync();
-        TempData["Success"] = "Xóa nhà cung cấp thành công.";
+        try
+        {
+            _context.NhaCungCap.Remove(item);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Xóa nhà cung cấp thành công.";
+        }
+        catch (DbUpdateException)
+        {
+            TempData["Error"] = "Không thể xóa nhà cung cấp này do có dữ liệu liên quan trong hệ thống.";
+        }
         return RedirectToAction(nameof(Index));
     }
 }

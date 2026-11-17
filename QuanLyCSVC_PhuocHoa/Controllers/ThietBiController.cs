@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuanLyCSVC_PhuocHoa.Data;
 using QuanLyCSVC_PhuocHoa.Helpers;
+using System.Security.Claims;
 
 namespace QuanLyCSVC_PhuocHoa.Controllers;
 
@@ -15,13 +16,14 @@ public class ThietBiController : Controller
 
     public ThietBiController(ApplicationDbContext context) => _context = context;
 
-    public async Task<IActionResult> Index(string? search, int? loaiId, int? phongId, string? tinhTrang)
+    public async Task<IActionResult> Index(string? search, int? loaiId, int? phongId, string? tinhTrang, int page = 1)
     {
         var query = BuildFilterQuery(search, loaiId, phongId, tinhTrang);
 
         await LoadFilterLists(loaiId, phongId, tinhTrang);
         ViewBag.Search = search;
-        return View(await query.OrderBy(t => t.MaTb).ToListAsync());
+        var pagedItems = await PaginatedList<ThietBi>.CreateAsync(query.OrderBy(t => t.MaTb), page, 15);
+        return View(pagedItems);
     }
 
     // Xuất danh sách thiết bị (đang áp dụng bộ lọc hiện tại) ra file Excel
@@ -78,6 +80,18 @@ public class ThietBiController : Controller
         return File(stream.ToArray(), "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
     }
 
+    /// <summary>
+    /// Trang in tem nhãn tài sản hàng loạt (khổ Decal A4) theo bộ lọc hoặc theo phòng
+    /// </summary>
+    public async Task<IActionResult> PrintLabels(string? search, int? loaiId, int? phongId, string? tinhTrang)
+    {
+        var query = BuildFilterQuery(search, loaiId, phongId, tinhTrang);
+        var items = await query.OrderBy(t => t.MaTb).ToListAsync();
+        ViewBag.Phong = phongId.HasValue ? await _context.Phong.FindAsync(phongId.Value) : null;
+        ViewBag.Search = search;
+        return View(items);
+    }
+
     private IQueryable<Models.Entities.ThietBi> BuildFilterQuery(string? search, int? loaiId, int? phongId, string? tinhTrang)
     {
         var query = _context.ThietBi
@@ -108,6 +122,44 @@ public class ThietBiController : Controller
             .Include(t => t.NhaCungCap)
             .FirstOrDefaultAsync(t => t.Id == id && !t.IsDeleted);
         return item == null ? NotFound() : View(item);
+    }
+
+    /// <summary>
+    /// Xử lý chuyển hướng khi quét mã QR thiết bị hoặc phòng
+    /// </summary>
+    [HttpGet]
+    public async Task<IActionResult> Scan(string? code)
+    {
+        if (string.IsNullOrWhiteSpace(code))
+            return RedirectToAction(nameof(Index));
+
+        code = code.Trim();
+
+        // 1. Kiểm tra nếu mã là đường dẫn URL chứa ID
+        var matchTb = System.Text.RegularExpressions.Regex.Match(code, @"/ThietBi/Details/(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        if (matchTb.Success && int.TryParse(matchTb.Groups[1].Value, out int tbId))
+        {
+            return RedirectToAction(nameof(Details), new { id = tbId });
+        }
+
+        var matchPhong = System.Text.RegularExpressions.Regex.Match(code, @"/Phong/Details/(\d+)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        if (matchPhong.Success && int.TryParse(matchPhong.Groups[1].Value, out int pId))
+        {
+            return RedirectToAction("Details", "Phong", new { id = pId });
+        }
+
+        // 2. Tra cứu theo Mã thiết bị hoặc Tên thiết bị
+        var tb = await _context.ThietBi.FirstOrDefaultAsync(t => !t.IsDeleted && (t.MaTb == code || t.TenTb == code));
+        if (tb != null)
+            return RedirectToAction(nameof(Details), new { id = tb.Id });
+
+        // 3. Tra cứu theo Mã phòng hoặc Tên phòng
+        var phong = await _context.Phong.FirstOrDefaultAsync(p => p.MaPhong == code || p.TenPhong == code);
+        if (phong != null)
+            return RedirectToAction("Details", "Phong", new { id = phong.Id });
+
+        TempData["Error"] = $"Không tìm thấy thiết bị hoặc phòng nào tương ứng với mã '{code}'.";
+        return RedirectToAction(nameof(Index), new { search = code });
     }
 
     [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
@@ -141,6 +193,13 @@ public class ThietBiController : Controller
         model.IsDeleted = false;
         _context.ThietBi.Add(model);
         await _context.SaveChangesAsync();
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await AuditLogHelper.LogAsync(_context, userId, $"Thêm thiết bị mới: {model.TenTb} ({model.MaTb})", "Thiết bị", HttpContext.Connection.RemoteIpAddress?.ToString());
+        }
+
         TempData["Success"] = "Thêm thiết bị thành công.";
         return RedirectToAction(nameof(Index));
     }
@@ -150,7 +209,7 @@ public class ThietBiController : Controller
     {
         var item = await _context.ThietBi.FindAsync(id);
         if (item == null) return NotFound();
-        await LoadFormSelectLists(item.LoaiThietBiId, item.PhongId);
+        await LoadFormSelectLists(item.LoaiThietBiId, item.PhongId, item.NhaCungCapId, item.BoMonId);
         return View(item);
     }
 
@@ -170,15 +229,22 @@ public class ThietBiController : Controller
 
         if (!ModelState.IsValid)
         {
-            await LoadFormSelectLists(model.LoaiThietBiId, model.PhongId);
+            await LoadFormSelectLists(model.LoaiThietBiId, model.PhongId, model.NhaCungCapId, model.BoMonId);
             return View(model);
         }
 
-        if (hinhAnh != null)
+        if (hinhAnh != null && hinhAnh.Length > 0)
             model.HinhAnh = await SaveImageAsync(hinhAnh);
 
         _context.ThietBi.Update(model);
         await _context.SaveChangesAsync();
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await AuditLogHelper.LogAsync(_context, userId, $"Cập nhật thiết bị: {model.TenTb} ({model.MaTb})", "Thiết bị", HttpContext.Connection.RemoteIpAddress?.ToString());
+        }
+
         TempData["Success"] = "Cập nhật thiết bị thành công.";
         return RedirectToAction(nameof(Index));
     }
@@ -190,10 +256,45 @@ public class ThietBiController : Controller
     {
         var item = await _context.ThietBi.FindAsync(id);
         if (item == null) return NotFound();
+
+        // Kiểm tra xem thiết bị có đang được mượn không
+        bool isBorrowed = await _context.ChiTietPhieuMuon
+            .AnyAsync(ct => ct.ThietBiId == id && (ct.PhieuMuon.TrangThai == "Đang mượn" || ct.PhieuMuon.TrangThai == "Chờ duyệt"));
+        if (isBorrowed)
+        {
+            TempData["Error"] = "Không thể xóa thiết bị đang trong quá trình mượn hoặc có phiếu chờ duyệt mượn.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Kiểm tra xem thiết bị có đang gửi sửa chữa không
+        bool isUnderMaintenance = await _context.PhieuBaoTri
+            .AnyAsync(bt => bt.ThietBiId == id && bt.TrangThai == "Đang sửa");
+        if (isUnderMaintenance)
+        {
+            TempData["Error"] = "Không thể xóa thiết bị đang trong đợt bảo trì, sửa chữa chưa hoàn tất.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        // Kiểm tra điều chuyển đang chờ duyệt
+        bool isTransferring = await _context.DieuChuyen
+            .AnyAsync(dc => dc.ThietBiId == id && dc.TrangThai == "Chờ duyệt");
+        if (isTransferring)
+        {
+            TempData["Error"] = "Không thể xóa thiết bị đang có yêu cầu điều chuyển chờ duyệt.";
+            return RedirectToAction(nameof(Index));
+        }
+
         // Soft delete
         item.IsDeleted = true;
         _context.ThietBi.Update(item);
         await _context.SaveChangesAsync();
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await AuditLogHelper.LogAsync(_context, userId, $"Xóa thiết bị: {item.TenTb} ({item.MaTb})", "Thiết bị", HttpContext.Connection.RemoteIpAddress?.ToString());
+        }
+
         TempData["Success"] = "Xóa thiết bị thành công.";
         return RedirectToAction(nameof(Index));
     }
@@ -207,16 +308,16 @@ public class ThietBiController : Controller
         ViewBag.TinhTrang = new SelectList(EnumHelper.DanhSachTinhTrang, tinhTrang);
     }
 
-    private async Task LoadFormSelectLists(int? loaiId = null, int? phongId = null)
+    private async Task LoadFormSelectLists(int? loaiId = null, int? phongId = null, int? nhaCungCapId = null, int? boMonId = null)
     {
         ViewBag.LoaiThietBiId = new SelectList(
             await _context.LoaiThietBi.OrderBy(l => l.TenLoaiTB).ToListAsync(), "Id", "TenLoaiTB", loaiId);
         ViewBag.PhongId = new SelectList(
             await _context.Phong.OrderBy(p => p.MaPhong).ToListAsync(), "Id", "TenPhong", phongId);
         ViewBag.NhaCungCapId = new SelectList(
-            await _context.NhaCungCap.Where(n => n.TrangThai).OrderBy(n => n.TenNCC).ToListAsync(), "Id", "TenNCC");
+            await _context.NhaCungCap.Where(n => n.TrangThai).OrderBy(n => n.TenNCC).ToListAsync(), "Id", "TenNCC", nhaCungCapId);
         ViewBag.BoMonId = new SelectList(
-            await _context.BoMon.OrderBy(b => b.TenBoMon).ToListAsync(), "Id", "TenBoMon");
+            await _context.BoMon.OrderBy(b => b.TenBoMon).ToListAsync(), "Id", "TenBoMon", boMonId);
         ViewBag.TinhTrangs = EnumHelper.DanhSachTinhTrang;
     }
 

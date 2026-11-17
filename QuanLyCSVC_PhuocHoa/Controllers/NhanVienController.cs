@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using QuanLyCSVC_PhuocHoa.Data;
 using QuanLyCSVC_PhuocHoa.Models;
 using QuanLyCSVC_PhuocHoa.Models.Entities;
+using QuanLyCSVC_PhuocHoa.Helpers;
 
 namespace QuanLyCSVC_PhuocHoa.Controllers;
 
@@ -21,7 +22,7 @@ public class NhanVienController : Controller
         _userManager = userManager;
     }
 
-    public async Task<IActionResult> Index(string? search)
+    public async Task<IActionResult> Index(string? search, int page = 1)
     {
         var query = _context.NhanVien
             .Include(n => n.BoMon)
@@ -34,7 +35,8 @@ public class NhanVienController : Controller
         }
 
         ViewBag.Search = search;
-        return View(await query.OrderBy(n => n.MaNv).ToListAsync());
+        var pagedItems = await PaginatedList<NhanVien>.CreateAsync(query.OrderBy(n => n.MaNv), page, 15);
+        return View(pagedItems);
     }
 
     public async Task<IActionResult> Details(int id)
@@ -82,6 +84,7 @@ public class NhanVienController : Controller
             UserName = model.Email,
             Email = model.Email,
             EmailConfirmed = true,
+            LockoutEnd = model.TrangThai ? null : DateTimeOffset.MaxValue,
             SecurityStamp = Guid.NewGuid().ToString()
         };
 
@@ -151,6 +154,7 @@ public class NhanVienController : Controller
             user.UserName = model.Email;
             user.NormalizedEmail = model.Email?.ToUpperInvariant();
             user.NormalizedUserName = model.Email?.ToUpperInvariant();
+            user.LockoutEnd = model.TrangThai ? null : DateTimeOffset.MaxValue; // Đồng bộ trạng thái khóa tài khoản
             await _userManager.UpdateAsync(user);
 
             if (!string.IsNullOrWhiteSpace(password) && password.Length >= 6)
@@ -191,32 +195,43 @@ public class NhanVienController : Controller
     [ValidateAntiForgeryToken]
     public async Task<IActionResult> Delete(int id)
     {
-        var nv = await _context.NhanVien
-            .Include(n => n.Phong)
-            .Include(n => n.PhieuMuonGiaoVien)
-            .Include(n => n.PhieuNhap)
-            .Include(n => n.DotKiemKe)
-            .FirstOrDefaultAsync(n => n.Id == id);
+        var nv = await _context.NhanVien.FirstOrDefaultAsync(n => n.Id == id);
         if (nv == null) return NotFound();
 
-        // Kiểm tra ràng buộc dữ liệu
-        if (nv.Phong.Any() || nv.PhieuMuonGiaoVien.Any() || nv.PhieuNhap.Any() || nv.DotKiemKe.Any())
+        // Kiểm tra toàn diện các ràng buộc dữ liệu trước khi xóa
+        var hasPhong = await _context.Phong.AnyAsync(p => p.NguoiPhuTrachId == id);
+        var hasPhieuMuon = await _context.PhieuMuon.AnyAsync(p => p.GiaoVienId == id || p.NguoiDuyetId == id);
+        var hasPhieuNhap = await _context.PhieuNhap.AnyAsync(p => p.NguoiNhapId == id);
+        var hasKiemKe = await _context.DotKiemKe.AnyAsync(d => d.NguoiChuTriId == id);
+        var hasDieuChuyen = await _context.DieuChuyen.AnyAsync(d => d.NguoiDeNghiId == id || d.NguoiDuyetId == id);
+        var hasBaoTri = await _context.PhieuBaoTri.AnyAsync(b => b.NguoiGuiId == id);
+        var hasHoiDong = await _context.ThanhVienHoiDong.AnyAsync(h => h.NhanVienId == id);
+        var hasAuditLog = await _context.LichSuHoatDong.AnyAsync(l => l.UserId == nv.UserId);
+
+        if (hasPhong || hasPhieuMuon || hasPhieuNhap || hasKiemKe || hasDieuChuyen || hasBaoTri || hasHoiDong || hasAuditLog)
         {
-            TempData["Error"] = "Không thể xóa nhân viên này vì đang phụ trách phòng hoặc có phiếu mượn/nhập/kiểm kê liên quan.";
+            TempData["Error"] = "Không thể xóa nhân viên này vì đã phát sinh dữ liệu lịch sử liên kết (phiếu mượn, nhập, điều chuyển, bảo trì, kiểm kê, nhật ký...). Vui lòng chỉnh sửa và chuyển trạng thái sang 'Ngưng hoạt động' để vô hiệu hóa tài khoản an toàn.";
             return RedirectToAction(nameof(Index));
         }
 
-        // Xóa Identity User trước
-        var user = await _userManager.FindByIdAsync(nv.UserId);
-        if (user != null)
+        try
         {
-            await _userManager.DeleteAsync(user);
+            var user = await _userManager.FindByIdAsync(nv.UserId);
+            _context.NhanVien.Remove(nv);
+            await _context.SaveChangesAsync();
+
+            if (user != null)
+            {
+                await _userManager.DeleteAsync(user);
+            }
+
+            TempData["Success"] = "Xóa nhân viên thành công.";
+        }
+        catch (DbUpdateException)
+        {
+            TempData["Error"] = "Không thể xóa nhân viên do còn ràng buộc dữ liệu. Vui lòng chuyển trạng thái sang 'Ngưng hoạt động'.";
         }
 
-        _context.NhanVien.Remove(nv);
-        await _context.SaveChangesAsync();
-
-        TempData["Success"] = "Xóa nhân viên thành công.";
         return RedirectToAction(nameof(Index));
     }
 
@@ -226,8 +241,9 @@ public class NhanVienController : Controller
             await _context.BoMon.OrderBy(b => b.TenBoMon).ToListAsync(), "Id", "TenBoMon", boMonId);
     }
 
-    private static string DetermineRoleByPosition(string chucVu)
+    private static string DetermineRoleByPosition(string? chucVu)
     {
+        if (string.IsNullOrWhiteSpace(chucVu)) return AppRoles.GiaoVien;
         var chucVuLower = chucVu.ToLower();
         if (chucVuLower.Contains("hiệu trưởng") || chucVuLower.Contains("phó hiệu trưởng"))
             return AppRoles.Admin;

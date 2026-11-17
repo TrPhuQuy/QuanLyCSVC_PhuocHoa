@@ -1,0 +1,234 @@
+@model DieuChuyen
+@{
+    Layout = null;
+    var tb = Model.ThietBi;
+    var ngayKy = Model.NgayDieuChuyen ?? DateOnly.FromDateTime(DateTime.Now);
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Biên bản bàn giao điều chuyển - @Model.MaDieuChuyen</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Times New Roman', Times, serif;
+            color: #000000;
+            margin: 0;
+            padding: 0;
+            font-size: 14px;
+        }
+
+        .action-bar {
+            background: #ffffff;
+            border-bottom: 1px solid #cbd5e1;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+
+        .print-page {
+            background: #ffffff;
+            max-width: 850px;
+            margin: 20px auto;
+            padding: 40px 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .table-handover {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .table-handover th, .table-handover td {
+            border: 1px solid #000000;
+            padding: 8px 10px;
+            vertical-align: middle;
+        }
+
+        .table-handover th {
+            text-align: center;
+            font-weight: bold;
+            background-color: #f1f5f9;
+        }
+
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: #ffffff !important;
+            }
+            .print-page {
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+            .table-handover th {
+                background-color: #ffffff !important;
+            }
+            @@page {
+                size: A4 portrait;
+                margin: 15mm 15mm 15mm 15mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Thanh thao tác in trên cùng -->
+    <div class="action-bar py-3 no-print">
+        <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h5 class="mb-0 fw-bold text-primary">
+                    <i class="bi bi-file-earmark-arrow-right"></i> Biên bản bàn giao & điều chuyển thiết bị
+                </h5>
+                <small class="text-muted">Mã phiếu: <strong>@Model.MaDieuChuyen</strong></small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" onclick="window.history.back()" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </button>
+                <button type="button" onclick="window.print()" class="btn btn-primary btn-sm px-3 fw-semibold">
+                    <i class="bi bi-printer-fill"></i> In biên bản (Ctrl + P)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="print-page">
+        <!-- Quốc hiệu tiêu ngữ -->
+        <table style="width: 100%; border: none; margin-bottom: 20px;">
+            <tr style="border: none;">
+                <td style="border: none; width: 45%; text-align: center; vertical-align: top; line-height: 1.4;">
+                    <div style="font-weight: bold; text-transform: uppercase; font-size: 13px;">TRƯỜNG THCS PHƯỚC HÒA</div>
+                    <div style="font-size: 12px; font-weight: bold;">TỔ THIẾT BỊ & CSVC</div>
+                    <div style="font-size: 11px;">Số: @Model.MaDieuChuyen/BB-BGDC</div>
+                </td>
+                <td style="border: none; width: 55%; text-align: center; vertical-align: top; line-height: 1.4;">
+                    <div style="font-weight: bold; font-size: 13px;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                    <div style="font-weight: bold; font-size: 12.5px;">Độc lập - Tự do - Hạnh phúc</div>
+                    <div style="font-style: italic; font-size: 12px; margin-top: 4px;">
+                        Phước Hòa, ngày @ngayKy.ToString("dd") tháng @ngayKy.ToString("MM") năm @ngayKy.ToString("yyyy")
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <div class="text-center my-4">
+            <h4 style="font-weight: bold; margin-bottom: 4px; text-transform: uppercase;">BIÊN BẢN BÀN GIAO & ĐIỀU CHUYỂN THIẾT BỊ</h4>
+            <div style="font-style: italic; font-size: 13px;">
+                (V/v luân chuyển tài sản, thiết bị dạy học giữa các phòng chuyên môn)
+            </div>
+        </div>
+
+        <div style="line-height: 1.7; margin-bottom: 15px;">
+            <p class="mb-2">Hôm nay, ngày @ngayKy.ToString("dd/MM/yyyy"), tại Trường THCS Phước Hòa, chúng tôi gồm có:</p>
+            
+            <div class="mb-2">
+                <strong>I. BÊN GIAO (Đơn vị/Phòng quản lý cũ):</strong>
+                <div style="padding-left: 20px;">
+                    <div>- Phòng: <strong>@(Model.PhongDi?.TenPhong ?? "Kho thiết bị chung")</strong> (Mã: @(Model.PhongDi?.MaPhong ?? "-"))</div>
+                    <div>- Đại diện giao: <strong>@(Model.NguoiDeNghi?.HoTen ?? "Cán bộ quản lý")</strong> &mdash; Chức vụ: @(Model.NguoiDeNghi?.ChucVu ?? "Giáo viên/Nhân viên")</div>
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <strong>II. BÊN NHẬN (Đơn vị/Phòng tiếp nhận mới):</strong>
+                <div style="padding-left: 20px;">
+                    <div>- Phòng: <strong>@(Model.PhongDen?.TenPhong ?? "-")</strong> (Mã: @(Model.PhongDen?.MaPhong ?? "-"))</div>
+                    <div>- Người phụ trách phòng tiếp nhận: <strong>@(Model.PhongDen?.NguoiPhuTrach?.HoTen ?? Model.NguoiDeNghi?.HoTen ?? "-")</strong></div>
+                </div>
+            </div>
+
+            <div class="mb-2">
+                <strong>III. ĐẠI DIỆN PHÊ DUYỆT / QUẢN LÝ CSVC:</strong>
+                <div style="padding-left: 20px;">
+                    <div>- Ông/Bà: <strong>@(Model.NguoiDuyet?.HoTen ?? "Ban Giám hiệu")</strong> &mdash; Chức vụ: @(Model.NguoiDuyet?.ChucVu ?? "Phụ trách CSVC")</div>
+                </div>
+            </div>
+
+            <div class="mt-3">
+                Hai bên cùng tiến hành kiểm tra thực tế và bàn giao thiết bị dạy học với các nội dung chi tiết sau:
+            </div>
+        </div>
+
+        <!-- Bảng thiết bị bàn giao -->
+        <table class="table-handover">
+            <thead>
+                <tr>
+                    <th style="width: 40px;">STT</th>
+                    <th>Tên thiết bị bàn giao</th>
+                    <th style="width: 100px;">Mã thiết bị</th>
+                    <th style="width: 70px;">ĐVT</th>
+                    <th style="width: 80px;">Số lượng</th>
+                    <th style="width: 130px;">Tình trạng kỹ thuật</th>
+                    <th>Ghi chú</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="text-center">1</td>
+                    <td>
+                        <strong>@(tb?.TenTb ?? "-")</strong>
+                        @if (tb?.LoaiThietBi != null)
+                        {
+                            <div style="font-size: 11px; color: #475569;">Phân loại: @tb.LoaiThietBi.TenLoaiTB</div>
+                        }
+                    </td>
+                    <td class="text-center font-monospace">@(tb?.MaTb ?? "-")</td>
+                    <td class="text-center">@(tb?.DonViTinh ?? "Cái")</td>
+                    <td class="text-center fw-bold fs-6">@Model.SoLuong</td>
+                    <td class="text-center">@(tb?.TinhTrang ?? "Hoạt động tốt")</td>
+                    <td style="font-size: 12px;">@(string.IsNullOrWhiteSpace(Model.LyDo) ? "Điều chuyển theo kế hoạch" : Model.LyDo)</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="line-height: 1.7; margin-top: 15px;">
+            <div><strong>Nội dung thỏa thuận & cam kết:</strong></div>
+            <ol style="padding-left: 20px; margin-bottom: 0;">
+                <li>Bên nhận đã kiểm tra thực tế thiết bị, xác nhận thiết bị đầy đủ phụ kiện, hoạt động bình thường theo quy chuẩn kỹ thuật.</li>
+                <li>Bên nhận có trách nhiệm quản lý, bố trí sử dụng đúng mục đích phục vụ công tác giảng dạy của nhà trường và bảo quản theo quy chế quản lý CSVC.</li>
+                <li>Biên bản này được lập thành 03 bản có giá trị pháp lý như nhau: Bên giao giữ 01 bản, Bên nhận giữ 01 bản, Tổ CSVC lưu hồ sơ 01 bản.</li>
+            </ol>
+        </div>
+
+        <!-- Chữ ký các bên -->
+        <table style="width: 100%; border: none; margin-top: 30px; page-break-inside: avoid;">
+            <tr style="border: none; font-weight: bold; text-align: center; vertical-align: top;">
+                <td style="border: none; width: 33%;">
+                    ĐẠI DIỆN BÊN GIAO<br />
+                    <span style="font-weight: normal; font-style: italic; font-size: 12px;">(Ký, ghi rõ họ tên)</span>
+                    <div style="height: 70px;"></div>
+                    <div>@(Model.NguoiDeNghi?.HoTen ?? "")</div>
+                </td>
+                <td style="border: none; width: 34%;">
+                    ĐẠI DIỆN BÊN NHẬN<br />
+                    <span style="font-weight: normal; font-style: italic; font-size: 12px;">(Ký, ghi rõ họ tên)</span>
+                    <div style="height: 70px;"></div>
+                    <div>@(Model.PhongDen?.NguoiPhuTrach?.HoTen ?? "")</div>
+                </td>
+                <td style="border: none; width: 33%;">
+                    NGƯỜI PHÊ DUYỆT<br />
+                    <span style="font-weight: normal; font-style: italic; font-size: 12px;">(Ký, ghi rõ họ tên, đóng dấu)</span>
+                    <div style="height: 70px;"></div>
+                    <div>@(Model.NguoiDuyet?.HoTen ?? "")</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</body>
+</html>

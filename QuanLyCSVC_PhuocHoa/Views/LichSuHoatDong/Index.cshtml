@@ -1,4 +1,4 @@
-@model IEnumerable<LichSuHoatDong>
+@model PaginatedList<LichSuHoatDong>
 @{
     ViewData["Title"] = "Nhật ký hoạt động";
 }
@@ -97,3 +97,5 @@
         </table>
     </div>
 </div>
+
+<partial name="_Pagination" model="Model" />

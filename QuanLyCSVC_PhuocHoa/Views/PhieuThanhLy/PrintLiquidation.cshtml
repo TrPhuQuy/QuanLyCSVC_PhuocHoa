@@ -1,0 +1,236 @@
+@model PhieuThanhLy
+@{
+    Layout = null;
+    var tb = Model.ThietBi;
+    var ngayDeNghi = Model.NgayDeNghi;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Biên bản thanh lý tài sản - @Model.MaThanhLy</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Times New Roman', Times, serif;
+            color: #000000;
+            margin: 0;
+            padding: 0;
+            font-size: 14.5px;
+            line-height: 1.5;
+        }
+
+        .action-bar {
+            background: #ffffff;
+            border-bottom: 1px solid #cbd5e1;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+
+        .print-page {
+            background: #ffffff;
+            max-width: 850px;
+            margin: 20px auto;
+            padding: 40px 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .table-tl {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .table-tl th, .table-tl td {
+            border: 1px solid #000000;
+            padding: 8px 10px;
+            vertical-align: middle;
+        }
+
+        .table-tl th {
+            text-align: center;
+            font-weight: bold;
+            background-color: #f8fafc;
+        }
+
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: #ffffff;
+            }
+            .print-page {
+                box-shadow: none;
+                border: none;
+                margin: 0;
+                padding: 0;
+                max-width: 100%;
+            }
+            @@page {
+                size: A4 portrait;
+                margin: 15mm 15mm 15mm 20mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="action-bar py-2 px-3 no-print d-flex justify-content-between align-items-center">
+        <div>
+            <span class="fw-bold text-dark"><i class="bi bi-printer text-danger me-1"></i> In Biên bản Họp Hội đồng thanh lý tài sản</span>
+            <span class="text-muted small ms-2">(@Model.MaThanhLy)</span>
+        </div>
+        <div class="d-flex gap-2">
+            <button onclick="window.history.back()" class="btn btn-outline-secondary btn-sm"><i class="bi bi-arrow-left"></i> Quay lại</button>
+            <button onclick="window.print()" class="btn btn-danger btn-sm"><i class="bi bi-printer-fill"></i> In biên bản (Ctrl + P)</button>
+        </div>
+    </div>
+
+    <div class="print-page">
+        <!-- Quốc hiệu & Tiêu ngữ -->
+        <table style="width: 100%; border: none; margin-bottom: 20px;">
+            <tr>
+                <td style="width: 45%; text-align: center; vertical-align: top;">
+                    <div style="font-size: 13px; text-transform: uppercase;">PHÒNG GD&ĐT HUYỆN PHÚ GIÁO</div>
+                    <div style="font-size: 14px; font-weight: bold; text-transform: uppercase;">TRƯỜNG THCS PHƯỚC HÒA</div>
+                    <div style="font-size: 13px;">Số: ......../BB-HĐTL</div>
+                </td>
+                <td style="width: 55%; text-align: center; vertical-align: top;">
+                    <div style="font-size: 14px; font-weight: bold; text-transform: uppercase;">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                    <div style="font-size: 14px; font-weight: bold; text-decoration: underline;">Độc lập - Tự do - Hạnh phúc</div>
+                    <div style="font-size: 13px; font-style: italic; margin-top: 5px;">
+                        Phước Hòa, ngày @ngayDeNghi.Day tháng @ngayDeNghi.Month năm @ngayDeNghi.Year
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <!-- Tiêu đề văn bản -->
+        <div style="text-align: center; margin: 25px 0 20px 0;">
+            <div style="font-size: 18px; font-weight: bold; text-transform: uppercase;">BIÊN BẢN HỌP HỘI ĐỒNG KIỂM TRA, THẨM ĐỊNH</div>
+            <div style="font-size: 16px; font-weight: bold; text-transform: uppercase;">VÀ ĐỀ NGHỊ THANH LÝ TÀI SẢN, THIẾT BỊ DẠY HỌC</div>
+            <div style="font-size: 13px; font-style: italic;">(Căn cứ Thông tư số 45/2018/TT-BTC & TT 23/2023/TT-BTC của Bộ Tài chính)</div>
+        </div>
+
+        <p>Hôm nay, ngày @ngayDeNghi.Day tháng @ngayDeNghi.Month năm @ngayDeNghi.Year, tại Trường THCS Phước Hòa.</p>
+        <p>Hội đồng thanh lý tài sản được thành lập theo Quyết định số @(string.IsNullOrWhiteSpace(Model.SoQuyetDinh) ? "......../QĐ-THCS-PH" : Model.SoQuyetDinh) đã tiến hành họp và kiểm tra thực tế hiện trạng tài sản, thiết bị đề nghị thanh lý như sau:</p>
+
+        <!-- Thành phần Hội đồng -->
+        <div style="font-weight: bold; margin-top: 15px;">I. THÀNH PHẦN HỘI ĐỒNG THANH LÝ:</div>
+        <table class="table-tl" style="margin-top: 8px;">
+            <thead>
+                <tr>
+                    <th style="width: 50px;">STT</th>
+                    <th>Họ và tên</th>
+                    <th>Chức danh / Đơn vị công tác</th>
+                    <th style="width: 160px;">Nhiệm vụ trong HĐ</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.ThanhVienHoiDong.Any())
+                {
+                    int stt = 1;
+                    foreach (var tv in Model.ThanhVienHoiDong)
+                    {
+                        <tr>
+                            <td style="text-align: center;">@(stt++)</td>
+                            <td><strong>@tv.NhanVien?.HoTen</strong></td>
+                            <td>@(tv.NhanVien?.ChucVu ?? "Cán bộ trường")</td>
+                            <td style="text-align: center;"><strong>@tv.VaiTro</strong></td>
+                        </tr>
+                    }
+                }
+                else
+                {
+                    <tr>
+                        <td style="text-align: center;">1</td>
+                        <td>............................................................</td>
+                        <td>Hiệu trưởng</td>
+                        <td style="text-align: center;">Chủ tịch Hội đồng</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;">2</td>
+                        <td>............................................................</td>
+                        <td>Cán bộ Thiết bị - Thư viện</td>
+                        <td style="text-align: center;">Ủy viên</td>
+                    </tr>
+                    <tr>
+                        <td style="text-align: center;">3</td>
+                        <td>............................................................</td>
+                        <td>Kế toán trường</td>
+                        <td style="text-align: center;">Ủy viên</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- Nội dung thẩm định -->
+        <div style="font-weight: bold; margin-top: 15px;">II. KẾT QUẢ KIỂM TRA VÀ THẨM ĐỊNH HIỆN TRẠNG TÀI SẢN:</div>
+        <table class="table-tl" style="margin-top: 8px;">
+            <thead>
+                <tr>
+                    <th style="width: 45px;">STT</th>
+                    <th>Tên tài sản / Thiết bị</th>
+                    <th style="width: 90px;">Mã TB</th>
+                    <th style="width: 60px;">SL</th>
+                    <th>Nguyên giá (đ)</th>
+                    <th>Giá trị còn lại (đ)</th>
+                    <th>Tình trạng thực tế</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="text-align: center;">1</td>
+                    <td><strong>@(tb?.TenTb ?? "Thiết bị trường học")</strong></td>
+                    <td style="text-align: center; font-family: monospace;">@(tb?.MaTb ?? "-")</td>
+                    <td style="text-align: center;">@(tb?.SoLuong ?? 1) @(tb?.DonViTinh ?? "Cái")</td>
+                    <td style="text-align: right;">@((tb?.GiaMua ?? 0).ToString("N0")) đ</td>
+                    <td style="text-align: right; font-weight: bold; color: #b91c1c;">@(Model.GiaTriConLai?.ToString("N0") ?? "0") đ</td>
+                    <td>@(tb?.TinhTrang ?? "Hư hỏng không sửa được")</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div style="margin-top: 10px;">
+            <p><strong>1. Lý do đề nghị thanh lý:</strong> @Model.LyDo</p>
+            <p><strong>2. Hình thức thanh lý đề xuất:</strong> Hủy bỏ / Phá dỡ / Bán phế liệu thu hồi nộp ngân sách nhà nước theo đúng quy định.</p>
+        </div>
+
+        <!-- Kết luận hội đồng -->
+        <div style="font-weight: bold; margin-top: 15px;">III. KẾT LUẬN CỦA HỘI ĐỒNG:</div>
+        <p>Hội đồng thanh lý thống nhất 100% đề nghị cấp có thẩm quyền phê duyệt thanh lý tài sản nêu trên do tài sản đã hết thời gian khấu hao, hư hỏng nặng, linh kiện không còn khả năng thay thế và sửa chữa không đem lại hiệu quả kinh tế.</p>
+        <p>Biên bản này được lập thành 03 bản có giá trị như nhau, thông qua các thành viên dự họp cùng ký tên và lưu vào hồ sơ quản lý tài sản nhà trường.</p>
+
+        <!-- Chữ ký -->
+        <table style="width: 100%; border: none; margin-top: 30px; text-align: center;">
+            <tr>
+                <td style="width: 33%; vertical-align: top;">
+                    <div style="font-weight: bold; text-transform: uppercase;">CÁN BỘ THIẾT BỊ</div>
+                    <div style="font-style: italic; font-size: 13px;">(Ký và ghi rõ họ tên)</div>
+                    <div style="height: 80px;"></div>
+                </td>
+                <td style="width: 33%; vertical-align: top;">
+                    <div style="font-weight: bold; text-transform: uppercase;">KẾ TOÁN ĐƠN VỊ</div>
+                    <div style="font-style: italic; font-size: 13px;">(Ký và ghi rõ họ tên)</div>
+                    <div style="height: 80px;"></div>
+                </td>
+                <td style="width: 34%; vertical-align: top;">
+                    <div style="font-weight: bold; text-transform: uppercase;">CHỦ TỊCH HỘI ĐỒNG</div>
+                    <div style="font-style: italic; font-size: 13px;">(Hiệu trưởng ký, đóng dấu)</div>
+                    <div style="height: 80px;"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</body>
+</html>

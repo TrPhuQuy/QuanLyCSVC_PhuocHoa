@@ -39,9 +39,16 @@ public class AccountController : Controller
             return View(model);
 
         var user = await _userManager.FindByEmailAsync(model.Email);
-        if (user == null || !user.DangHoatDong)
+        if (user == null)
         {
             ModelState.AddModelError(string.Empty, "Email hoặc mật khẩu không đúng.");
+            return View(model);
+        }
+
+        if (!user.DangHoatDong)
+        {
+            await AuditLogHelper.LogAsync(_context, user.Id, $"Đăng nhập bị từ chối: Tài khoản {model.Email} đã bị vô hiệu hóa", "Hệ thống", HttpContext.Connection.RemoteIpAddress?.ToString());
+            ModelState.AddModelError(string.Empty, "Tài khoản của bạn đã bị vô hiệu hóa. Vui lòng liên hệ ban quản trị nhà trường.");
             return View(model);
         }
 

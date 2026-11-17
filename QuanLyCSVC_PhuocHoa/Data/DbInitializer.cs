@@ -24,6 +24,39 @@ public static class DbInitializer
 
         var passwordHasher = new PasswordHasher<ApplicationUser>();
         var users = await context.Users.ToListAsync();
+
+        // Khởi tạo tài khoản Quản trị viên mặc định nếu cơ sở dữ liệu chưa có tài khoản nào
+        if (!users.Any())
+        {
+            var defaultAdmin = new ApplicationUser
+            {
+                UserName = "admin@thcsphuochoa.edu.vn",
+                Email = "admin@thcsphuochoa.edu.vn",
+                EmailConfirmed = true,
+                NormalizedUserName = "ADMIN@THCSPHUOCHOA.EDU.VN",
+                NormalizedEmail = "ADMIN@THCSPHUOCHOA.EDU.VN",
+                SecurityStamp = Guid.NewGuid().ToString()
+            };
+            var createRes = await userManager.CreateAsync(defaultAdmin, "Admin@123");
+            if (createRes.Succeeded)
+            {
+                await userManager.AddToRoleAsync(defaultAdmin, AppRoles.Admin);
+                var defaultNv = new NhanVien
+                {
+                    MaNv = "ADMIN001",
+                    HoTen = "Quản Trị Viên Hệ Thống",
+                    ChucVu = "Hiệu trưởng",
+                    Email = defaultAdmin.Email,
+                    UserId = defaultAdmin.Id,
+                    TrangThai = true,
+                    CreatedAt = DateTime.Now
+                };
+                context.NhanVien.Add(defaultNv);
+                await context.SaveChangesAsync();
+                users.Add(defaultAdmin);
+            }
+        }
+
         var anyChanges = false;
         foreach (var user in users)
         {

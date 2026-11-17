@@ -6,7 +6,7 @@ using QuanLyCSVC_PhuocHoa.Models.Entities;
 
 namespace QuanLyCSVC_PhuocHoa.Controllers;
 
-[Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
+[Authorize]
 public class BoMonController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -16,20 +16,29 @@ public class BoMonController : Controller
     public async Task<IActionResult> Index() =>
         View(await _context.BoMon.OrderBy(b => b.TenBoMon).ToListAsync());
 
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public IActionResult Create() => View(new BoMon());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Create(BoMon model)
     {
+        if (await _context.BoMon.AnyAsync(b => b.TenBoMon.ToLower() == model.TenBoMon.Trim().ToLower()))
+        {
+            ModelState.AddModelError(nameof(model.TenBoMon), "Tên bộ môn này đã tồn tại.");
+        }
+
         if (!ModelState.IsValid) return View(model);
 
+        model.TenBoMon = model.TenBoMon.Trim();
         _context.BoMon.Add(model);
         await _context.SaveChangesAsync();
         TempData["Success"] = "Thêm bộ môn thành công.";
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Edit(int id)
     {
         var item = await _context.BoMon.FindAsync(id);
@@ -38,11 +47,19 @@ public class BoMonController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Edit(int id, BoMon model)
     {
         if (id != model.Id) return NotFound();
+
+        if (await _context.BoMon.AnyAsync(b => b.Id != id && b.TenBoMon.ToLower() == model.TenBoMon.Trim().ToLower()))
+        {
+            ModelState.AddModelError(nameof(model.TenBoMon), "Tên bộ môn này đã tồn tại.");
+        }
+
         if (!ModelState.IsValid) return View(model);
 
+        model.TenBoMon = model.TenBoMon.Trim();
         _context.BoMon.Update(model);
         await _context.SaveChangesAsync();
         TempData["Success"] = "Cập nhật bộ môn thành công.";
@@ -51,6 +68,7 @@ public class BoMonController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Delete(int id)
     {
         var item = await _context.BoMon
@@ -65,9 +83,17 @@ public class BoMonController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        _context.BoMon.Remove(item);
-        await _context.SaveChangesAsync();
-        TempData["Success"] = "Xóa bộ môn thành công.";
+        try
+        {
+            _context.BoMon.Remove(item);
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Xóa bộ môn thành công.";
+        }
+        catch (DbUpdateException)
+        {
+            TempData["Error"] = "Không thể xóa bộ môn này do có dữ liệu liên quan trong hệ thống.";
+        }
+
         return RedirectToAction(nameof(Index));
     }
 }

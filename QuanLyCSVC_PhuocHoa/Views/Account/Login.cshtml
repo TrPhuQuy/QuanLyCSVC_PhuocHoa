@@ -1,6 +1,6 @@
 @model QuanLyCSVC_PhuocHoa.Models.ViewModels.LoginViewModel
 @{
-    ViewData["Title"] = "Đăng nhập";
+    ViewData["Title"] = "Đăng nhập hệ thống";
     Layout = null;
 }
 <!DOCTYPE html>
@@ -8,78 +8,126 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - THCS Phước Hòa</title>
+    <title>@ViewData["Title"] - Quản lý CSVC THCS Phước Hòa</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <style>
+        .demo-chip {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .demo-chip:hover {
+            border-color: #2563eb;
+            background: #eff6ff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.1);
+        }
+    </style>
 </head>
 <body class="login-page">
+
     <div class="login-container">
+        <!-- Logo & Trường học -->
         <div class="text-center text-white mb-4">
-            <i class="bi bi-building-fill" style="font-size: 2.5rem; opacity: 0.9;"></i>
-            <h4 class="mt-2 fw-bold mb-0">THCS Phước Hòa</h4>
-            <small class="opacity-75">Bình Dương</small>
+            <div class="brand-logo-badge mx-auto mb-3" style="width: 58px; height: 58px; font-size: 1.8rem;">
+                <i class="bi bi-mortarboard-fill"></i>
+            </div>
+            <h3 class="fw-bold mb-1 letter-spacing-tight">TRƯỜNG THCS PHƯỚC HÒA</h3>
+            <p class="text-white-50 small mb-0">HỆ THỐNG QUẢN LÝ CƠ SỞ VẬT CHẤT &amp; THIẾT BỊ DẠY HỌC</p>
         </div>
-        <div class="card login-card shadow-lg">
-            <div class="card-body p-4 p-md-5">
-                <h5 class="fw-bold text-center mb-1">Quản lý Cơ sở Vật chất</h5>
-                <p class="text-muted text-center small mb-4">Vui lòng đăng nhập để tiếp tục</p>
 
-                <form asp-action="Login" method="post">
-                    @Html.AntiForgeryToken()
-                    <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
-                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3 small"></div>
+        <!-- Khung đăng nhập Glassmorphism -->
+        <div class="login-card-pro">
+            <div class="text-center mb-4">
+                <h4 class="fw-bold text-dark mb-1">Cổng đăng nhập</h4>
+                <p class="text-muted small mb-0">Vui lòng nhập tài khoản được cấp để tiếp tục</p>
+            </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Email" class="form-label fw-semibold small"></label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-envelope"></i></span>
-                            <input asp-for="Email" class="form-control" placeholder="email@truong.edu.vn" autocomplete="email" />
+            <form asp-action="Login" method="post" id="loginForm">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="returnUrl" value="@ViewData["ReturnUrl"]" />
+                <div asp-validation-summary="ModelOnly" class="alert alert-danger py-2 small mb-3"></div>
+
+                <div class="mb-3">
+                    <label asp-for="Email" class="form-label"></label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-envelope"></i></span>
+                        <input asp-for="Email" id="emailInput" class="form-control border-start-0" placeholder="email@truong.edu.vn" autocomplete="email" required />
+                    </div>
+                    <span asp-validation-for="Email" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label asp-for="Password" class="form-label mb-0"></label>
+                        <span class="text-muted small">Mặc định: <code>Admin@123</code></span>
+                    </div>
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0 text-muted"><i class="bi bi-lock"></i></span>
+                        <input asp-for="Password" class="form-control border-start-0 border-end-0" id="passwordInput" placeholder="Nhập mật khẩu..." autocomplete="current-password" required />
+                        <button type="button" class="btn btn-outline-secondary border-start-0 bg-white" id="togglePwd" tabindex="-1">
+                            <i class="bi bi-eye text-muted" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                    <span asp-validation-for="Password" class="text-danger small"></span>
+                </div>
+
+                <div class="mb-4 form-check">
+                    <input asp-for="RememberMe" class="form-check-input" id="rememberMe" />
+                    <label asp-for="RememberMe" class="form-check-label text-muted small" for="rememberMe">Ghi nhớ đăng nhập trên thiết bị này</label>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 py-2 fs-6 fw-bold shadow-sm">
+                    <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập hệ thống
+                </button>
+            </form>
+
+            <!-- Tài khoản mẫu Demo cho Hội đồng kiểm thử -->
+            <div class="mt-4 pt-3 border-top">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <span class="text-muted small fw-bold"><i class="bi bi-lightning-charge-fill text-warning me-1"></i> Tài khoản Demo (Click để điền nhanh):</span>
+                </div>
+                <div class="d-flex flex-column gap-2">
+                    <div class="demo-chip" onclick="fillLogin('nguyenthihoa.sgdbd@sgdbinhduong.edu.vn', 'Admin@123')">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-danger">Admin</span>
+                            <span class="small font-monospace text-dark text-truncate" style="max-width: 250px;">nguyenthihoa.sgdbd@sgdbinhduong.edu.vn</span>
                         </div>
-                        <span asp-validation-for="Email" class="text-danger small"></span>
+                        <i class="bi bi-arrow-right-short text-muted fs-5"></i>
                     </div>
 
-                    <div class="mb-3">
-                        <label asp-for="Password" class="form-label fw-semibold small"></label>
-                        <div class="input-group">
-                            <span class="input-group-text"><i class="bi bi-lock"></i></span>
-                            <input asp-for="Password" class="form-control" id="passwordInput" autocomplete="current-password" />
-                            <button type="button" class="btn btn-outline-secondary" id="togglePwd" tabindex="-1">
-                                <i class="bi bi-eye" id="eyeIcon"></i>
-                            </button>
+                    <div class="demo-chip" onclick="fillLogin('phamvantuan.tb@phuochoa.edu.vn', 'Admin@123')">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-primary">Thủ kho TB</span>
+                            <span class="small font-monospace text-dark text-truncate" style="max-width: 250px;">phamvantuan.tb@phuochoa.edu.vn</span>
                         </div>
-                        <span asp-validation-for="Password" class="text-danger small"></span>
+                        <i class="bi bi-arrow-right-short text-muted fs-5"></i>
                     </div>
 
-                    <div class="mb-4 form-check">
-                        <input asp-for="RememberMe" class="form-check-input" />
-                        <label asp-for="RememberMe" class="form-check-label small"></label>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary w-100 py-2 fw-semibold">
-                        <i class="bi bi-box-arrow-in-right me-1"></i> Đăng nhập
-                    </button>
-                </form>
-
-                <div class="mt-4 p-3 rounded-3 small" style="background: #f8fafc; border: 1px solid #e2e8f0;">
-                    <p class="fw-semibold text-secondary mb-2"><i class="bi bi-info-circle me-1"></i> Tài khoản demo (mật khẩu: <code>Admin@123</code>)</p>
-                    <div class="mb-1">
-                        <span class="badge bg-danger me-1">Admin</span>
-                        <code style="font-size: 0.78rem; cursor: pointer;" onclick="fillLogin('nguyenthihoa.sgdbd@sgdbinhduong.edu.vn')" title="Nhấn để điền tự động">nguyenthihoa.sgdbd@sgdbinhduong.edu.vn</code>
-                    </div>
-                    <div class="mb-1">
-                        <span class="badge bg-primary me-1">Thủ kho</span>
-                        <code style="font-size: 0.78rem; cursor: pointer;" onclick="fillLogin('phamvantuan.tb@phuochoa.edu.vn')" title="Nhấn để điền tự động">phamvantuan.tb@phuochoa.edu.vn</code>
-                    </div>
-                    <div>
-                        <span class="badge bg-success me-1">Giáo viên</span>
-                        <code style="font-size: 0.78rem; cursor: pointer;" onclick="fillLogin('vothihuong1984@gmail.com')" title="Nhấn để điền tự động">vothihuong1984@gmail.com</code>
+                    <div class="demo-chip" onclick="fillLogin('vothihuong1984@gmail.com', 'Admin@123')">
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="badge bg-success">Giáo viên</span>
+                            <span class="small font-monospace text-dark text-truncate" style="max-width: 250px;">vothihuong1984@gmail.com</span>
+                        </div>
+                        <i class="bi bi-arrow-right-short text-muted fs-5"></i>
                     </div>
                 </div>
             </div>
         </div>
-        <p class="text-center text-white mt-3 small opacity-75">
-            &copy; 2025-2026 Trường THCS Phước Hòa, Bình Dương
+
+        <p class="text-center text-white-50 mt-4 small mb-0">
+            &copy; 2025-2026 Trường THCS Phước Hòa &bull; Huyện Phú Giáo, Tỉnh Bình Dương
         </p>
     </div>
 
@@ -92,16 +140,19 @@
             const icon = document.getElementById('eyeIcon');
             if (pwd.type === 'password') {
                 pwd.type = 'text';
-                icon.className = 'bi bi-eye-slash';
+                icon.className = 'bi bi-eye-slash text-muted';
             } else {
                 pwd.type = 'password';
-                icon.className = 'bi bi-eye';
+                icon.className = 'bi bi-eye text-muted';
             }
         });
 
-        function fillLogin(email) {
-            document.getElementById('Email').value = email;
-            document.getElementById('Password').value = 'Admin@123';
+        function fillLogin(email, pwd) {
+            document.getElementById('emailInput').value = email;
+            document.getElementById('passwordInput').value = pwd;
+            const btn = document.querySelector('button[type="submit"]');
+            btn.classList.add('btn-success');
+            setTimeout(() => btn.classList.remove('btn-success'), 400);
         }
     </script>
 </body>

@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuanLyCSVC_PhuocHoa.Data;
+using QuanLyCSVC_PhuocHoa.Helpers;
 using QuanLyCSVC_PhuocHoa.Models;
 using QuanLyCSVC_PhuocHoa.Models.Entities;
 using System.Security.Claims;
@@ -26,7 +27,7 @@ public class DieuChuyenController : Controller
         return _context.NhanVien.FirstOrDefaultAsync(n => n.UserId == userId);
     }
 
-    public async Task<IActionResult> Index(string? search, string? trangThai)
+    public async Task<IActionResult> Index(string? search, string? trangThai, int page = 1)
     {
         var employee = await GetCurrentEmployeeAsync();
 
@@ -55,15 +56,34 @@ public class DieuChuyenController : Controller
 
         ViewBag.Search = search;
         ViewBag.TrangThai = trangThai;
-        ViewBag.TrangThais = new List<string> { "Chờ duyệt", "Đã duyệt", "Từ chối" };
+        ViewBag.TrangThais = new List<string> { "Chờ duyệt", "Đã duyệt", "Từ chối", "Đã hủy" };
 
-        return View(await query.OrderByDescending(d => d.NgayDeNghi).ToListAsync());
+        var pagedItems = await PaginatedList<DieuChuyen>.CreateAsync(query.OrderByDescending(d => d.NgayDeNghi), page, 15);
+        return View(pagedItems);
     }
 
     public async Task<IActionResult> Details(int id)
     {
         var item = await _context.DieuChuyen
             .Include(d => d.ThietBi)
+            .Include(d => d.PhongDi)
+            .Include(d => d.PhongDen)
+            .Include(d => d.NguoiDeNghi)
+            .Include(d => d.NguoiDuyet)
+            .FirstOrDefaultAsync(d => d.Id == id);
+
+        if (item == null) return NotFound();
+
+        return View(item);
+    }
+
+    /// <summary>
+    /// In Biên bản bàn giao và điều chuyển thiết bị
+    /// </summary>
+    public async Task<IActionResult> PrintHandover(int id)
+    {
+        var item = await _context.DieuChuyen
+            .Include(d => d.ThietBi).ThenInclude(t => t.LoaiThietBi)
             .Include(d => d.PhongDi)
             .Include(d => d.PhongDen)
             .Include(d => d.NguoiDeNghi)
@@ -132,6 +152,13 @@ public class DieuChuyenController : Controller
 
         _context.DieuChuyen.Add(model);
         await _context.SaveChangesAsync();
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(userId))
+        {
+            await AuditLogHelper.LogAsync(_context, userId, $"Gửi yêu cầu điều chuyển: {model.MaDieuChuyen} ({thietBi?.TenTb ?? "TB"})", "Điều chuyển", HttpContext.Connection.RemoteIpAddress?.ToString());
+        }
+
         TempData["Success"] = "Gửi yêu cầu điều chuyển thành công. Đang chờ phê duyệt.";
         return RedirectToAction(nameof(Index));
     }
@@ -143,6 +170,7 @@ public class DieuChuyenController : Controller
     {
         var item = await _context.DieuChuyen
             .Include(d => d.ThietBi)
+            .Include(d => d.PhongDen)
             .FirstOrDefaultAsync(d => d.Id == id);
 
         if (item == null) return NotFound();
@@ -160,69 +188,108 @@ public class DieuChuyenController : Controller
         }
 
         var thietBi = item.ThietBi;
-        if (thietBi.IsDeleted)
+        if (thietBi == null || thietBi.IsDeleted)
         {
-            TempData["Error"] = "Thiết bị này đã bị xóa khỏi hệ thống.";
+            TempData["Error"] = "Thiết bị này không tồn tại hoặc đã bị xóa khỏi hệ thống.";
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        if (item.SoLuong > thietBi.SoLuong)
+        if (thietBi.TinhTrang == "Thanh lý")
         {
-            TempData["Error"] = $"Không đủ số lượng thiết bị để điều chuyển. Hiện tại chỉ còn {thietBi.SoLuong}.";
+            TempData["Error"] = "Thiết bị này đã thanh lý, không thể điều chuyển.";
             return RedirectToAction(nameof(Details), new { id });
         }
 
-        // Thực hiện điều chuyển thiết bị
-        if (item.SoLuong == thietBi.SoLuong)
+        if (item.SoLuong <= 0 || item.SoLuong > thietBi.SoLuong)
         {
-            // Trường hợp 1: Chuyển toàn bộ -> chỉ cần cập nhật PhongId
-            thietBi.PhongId = item.PhongDenId;
-            _context.ThietBi.Update(thietBi);
+            TempData["Error"] = $"Số lượng điều chuyển không hợp lệ. Hiện tại thiết bị chỉ còn {thietBi.SoLuong}.";
+            return RedirectToAction(nameof(Details), new { id });
         }
-        else
+
+        await using var transaction = await _context.Database.BeginTransactionAsync();
+        try
         {
-            // Trường hợp 2: Chuyển một phần -> trừ đi số lượng cũ, tạo mới 1 bản ghi thiết bị ở phòng mới
-            thietBi.SoLuong -= item.SoLuong;
-            _context.ThietBi.Update(thietBi);
-
-            // Tạo mã thiết bị mới (thêm hậu tố để tránh trùng lặp mã duy nhất)
-            var newMaTb = $"{thietBi.MaTb}-{DateTime.Now:fff}";
-            if (newMaTb.Length > 20) newMaTb = newMaTb[..20];
-
-            var newThietBi = new ThietBi
+            // Thực hiện điều chuyển thiết bị
+            if (item.SoLuong == thietBi.SoLuong)
             {
-                MaTb = newMaTb,
-                TenTb = thietBi.TenTb,
-                LoaiThietBiId = thietBi.LoaiThietBiId,
-                HangSanXuat = thietBi.HangSanXuat,
-                NamSanXuat = thietBi.NamSanXuat,
-                NgayMua = thietBi.NgayMua,
-                GiaMua = thietBi.GiaMua,
-                SoLuong = item.SoLuong,
-                DonViTinh = thietBi.DonViTinh,
-                TinhTrang = thietBi.TinhTrang,
-                HinhAnh = thietBi.HinhAnh,
-                ViTriSuDung = item.PhongDenId.ToString(),
-                PhongId = item.PhongDenId,
-                BoMonId = thietBi.BoMonId,
-                NhaCungCapId = thietBi.NhaCungCapId,
-                GhiChu = $"Được điều chuyển từ phòng {item.PhongDiId} (Phiếu {item.MaDieuChuyen})",
-                CreatedAt = DateTime.Now,
-                IsDeleted = false
-            };
+                // Trường hợp 1: Chuyển toàn bộ -> cập nhật PhongId và ViTriSuDung
+                thietBi.PhongId = item.PhongDenId;
+                if (item.PhongDen != null)
+                {
+                    thietBi.ViTriSuDung = item.PhongDen.TenPhong;
+                }
+                thietBi.GhiChu = $"[ĐIỀU CHUYỂN]: Chuyển sang phòng mới theo phiếu {item.MaDieuChuyen}. {thietBi.GhiChu}";
+                _context.ThietBi.Update(thietBi);
+            }
+            else
+            {
+                // Trường hợp 2: Chuyển một phần -> trừ đi số lượng cũ, tạo mới 1 bản ghi thiết bị ở phòng mới
+                thietBi.SoLuong -= item.SoLuong;
+                thietBi.GhiChu = $"[ĐIỀU CHUYỂN 1 PHẦN]: Đã chuyển {item.SoLuong} {thietBi.DonViTinh} sang phòng mới theo phiếu {item.MaDieuChuyen}. {thietBi.GhiChu}";
+                _context.ThietBi.Update(thietBi);
 
-            _context.ThietBi.Add(newThietBi);
+                // Tạo mã thiết bị mới chuẩn quy cách, tránh trùng lặp
+                string baseMa = thietBi.MaTb.Length > 15 ? thietBi.MaTb[..15] : thietBi.MaTb;
+                string newMaTb = $"{baseMa}.P{item.PhongDenId}";
+                if (newMaTb.Length > 20) newMaTb = newMaTb[..20];
+
+                int count = 1;
+                while (await _context.ThietBi.AnyAsync(t => t.MaTb == newMaTb))
+                {
+                    string suffix = $"-{count++}";
+                    int maxBase = 20 - suffix.Length;
+                    newMaTb = (baseMa.Length > maxBase ? baseMa[..maxBase] : baseMa) + suffix;
+                }
+
+                var newThietBi = new ThietBi
+                {
+                    MaTb = newMaTb,
+                    TenTb = thietBi.TenTb,
+                    LoaiThietBiId = thietBi.LoaiThietBiId,
+                    HangSanXuat = thietBi.HangSanXuat,
+                    NamSanXuat = thietBi.NamSanXuat,
+                    NgayMua = thietBi.NgayMua,
+                    GiaMua = thietBi.GiaMua,
+                    SoLuong = item.SoLuong,
+                    DonViTinh = thietBi.DonViTinh,
+                    TinhTrang = thietBi.TinhTrang,
+                    HinhAnh = thietBi.HinhAnh,
+                    ViTriSuDung = item.PhongDen?.TenPhong ?? item.PhongDenId.ToString(),
+                    PhongId = item.PhongDenId,
+                    BoMonId = thietBi.BoMonId,
+                    NhaCungCapId = thietBi.NhaCungCapId,
+                    GhiChu = $"Được điều chuyển từ phòng {item.PhongDiId} (Phiếu {item.MaDieuChuyen})",
+                    CreatedAt = DateTime.Now,
+                    IsDeleted = false
+                };
+
+                _context.ThietBi.Add(newThietBi);
+            }
+
+            // Cập nhật trạng thái phiếu điều chuyển
+            item.TrangThai = "Đã duyệt";
+            item.NguoiDuyetId = employee.Id;
+            item.NgayDuyet = DateTime.Now;
+
+            _context.DieuChuyen.Update(item);
+            await _context.SaveChangesAsync();
+
+            var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(currentUserId))
+            {
+                await AuditLogHelper.LogAsync(_context, currentUserId, $"Duyệt điều chuyển: {item.MaDieuChuyen} ({thietBi.TenTb})", "Điều chuyển", HttpContext.Connection.RemoteIpAddress?.ToString());
+            }
+
+            await transaction.CommitAsync();
+
+            TempData["Success"] = "Phê duyệt điều chuyển thiết bị thành công. Thiết bị đã được chuyển sang phòng mới.";
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            TempData["Error"] = "Có lỗi xảy ra khi phê duyệt điều chuyển: " + ex.Message;
         }
 
-        // Cập nhật trạng thái phiếu điều chuyển
-        item.TrangThai = "Đã duyệt";
-        item.NguoiDuyetId = employee.Id;
-        item.NgayDuyet = DateTime.Now;
-
-        _context.DieuChuyen.Update(item);
-        await _context.SaveChangesAsync();
-
-        TempData["Success"] = "Phê duyệt điều chuyển thiết bị thành công. Thiết bị đã được chuyển sang phòng mới.";
         return RedirectToAction(nameof(Details), new { id });
     }
 
@@ -255,7 +322,51 @@ public class DieuChuyenController : Controller
         _context.DieuChuyen.Update(item);
         await _context.SaveChangesAsync();
 
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            await AuditLogHelper.LogAsync(_context, currentUserId, $"Từ chối điều chuyển: {item.MaDieuChuyen}", "Điều chuyển", HttpContext.Connection.RemoteIpAddress?.ToString());
+        }
+
         TempData["Success"] = "Đã từ chối yêu cầu điều chuyển.";
+        return RedirectToAction(nameof(Details), new { id });
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Cancel(int id, string? lyDoHuy)
+    {
+        var item = await _context.DieuChuyen.FindAsync(id);
+        if (item == null) return NotFound();
+        if (item.TrangThai != "Chờ duyệt")
+        {
+            TempData["Error"] = "Chỉ có thể hủy yêu cầu đang ở trạng thái Chờ duyệt.";
+            return RedirectToAction(nameof(Details), new { id });
+        }
+
+        var employee = await GetCurrentEmployeeAsync();
+        bool isStaff = User.IsInRole(AppRoles.Admin) || User.IsInRole(AppRoles.NhanVienThietBi);
+        bool isOwner = employee != null && item.NguoiDeNghiId == employee.Id;
+
+        if (!isStaff && !isOwner)
+        {
+            return Forbid();
+        }
+
+        item.TrangThai = "Đã hủy";
+        if (!string.IsNullOrWhiteSpace(lyDoHuy))
+            item.LyDo = $"{item.LyDo} (Lý do hủy: {lyDoHuy})";
+
+        _context.DieuChuyen.Update(item);
+        await _context.SaveChangesAsync();
+
+        var currentUserId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (!string.IsNullOrEmpty(currentUserId))
+        {
+            await AuditLogHelper.LogAsync(_context, currentUserId, $"Hủy yêu cầu điều chuyển: {item.MaDieuChuyen}", "Điều chuyển", HttpContext.Connection.RemoteIpAddress?.ToString());
+        }
+
+        TempData["Success"] = "Đã hủy yêu cầu điều chuyển thành công.";
         return RedirectToAction(nameof(Details), new { id });
     }
 
@@ -265,7 +376,7 @@ public class DieuChuyenController : Controller
             .Include(t => t.Phong)
             .Where(t => !t.IsDeleted && t.SoLuong > 0)
             .OrderBy(t => t.TenTb)
-            .Select(t => new { Id = t.Id, Display = $"{t.TenTb} ({t.MaTb}) - Tại: {t.Phong.TenPhong} (SL: {t.SoLuong})" })
+            .Select(t => new { Id = t.Id, Display = $"{t.TenTb} ({t.MaTb}) - Tại: {(t.Phong != null ? t.Phong.TenPhong : "-")} (SL: {t.SoLuong})" })
             .ToListAsync();
 
         ViewBag.ThietBiId = new SelectList(thietBis, "Id", "Display", thietBiId);

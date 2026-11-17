@@ -1,4 +1,4 @@
-@model IEnumerable<DotKiemKe>
+@model PaginatedList<DotKiemKe>
 @{
     ViewData["Title"] = "Quản lý Đợt Kiểm kê";
 }
@@ -78,3 +78,5 @@
         </table>
     </div>
 </div>
+
+<partial name="_Pagination" model="Model" />

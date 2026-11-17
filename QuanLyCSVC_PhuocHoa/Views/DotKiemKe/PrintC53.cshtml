@@ -1,0 +1,302 @@
+@model DotKiemKe
+@{
+    Layout = null;
+    var chiTiets = Model.ChiTietKiemKe.OrderBy(c => c.ThietBi.MaTb).ToList();
+    var tongSlSo = chiTiets.Sum(c => c.SoLuongSoSach);
+    var tongSlThuc = chiTiets.Sum(c => c.SoLuongThucTe);
+    var tongGiaSo = chiTiets.Sum(c => (c.ThietBi.GiaMua ?? 0) * c.SoLuongSoSach);
+    var tongGiaThuc = chiTiets.Sum(c => (c.ThietBi.GiaMua ?? 0) * c.SoLuongThucTe);
+    var tongThua = chiTiets.Where(c => c.ChenhLech > 0).Sum(c => c.ChenhLech);
+    var tongThieu = chiTiets.Where(c => c.ChenhLech < 0).Sum(c => Math.Abs(c.ChenhLech));
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Biên bản kiểm kê TSCĐ C53-HD - @Model.MaDotKiemKe</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Times New Roman', Times, serif;
+            color: #000000;
+            margin: 0;
+            padding: 0;
+            font-size: 13px;
+        }
+
+        .action-bar {
+            background: #ffffff;
+            border-bottom: 1px solid #cbd5e1;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+
+        .print-page {
+            background: #ffffff;
+            max-width: 1080px;
+            margin: 20px auto;
+            padding: 30px 40px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .table-c53 {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .table-c53 th, .table-c53 td {
+            border: 1px solid #000000;
+            padding: 5px 6px;
+            vertical-align: middle;
+            font-size: 12px;
+        }
+
+        .table-c53 th {
+            text-align: center;
+            font-weight: bold;
+            background-color: #f1f5f9;
+        }
+
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: #ffffff !important;
+            }
+            .print-page {
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+            .table-c53 th {
+                background-color: #ffffff !important;
+            }
+            @@page {
+                size: A4 landscape;
+                margin: 12mm 10mm 12mm 10mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Thanh thao tác in ấn trên cùng -->
+    <div class="action-bar py-3 no-print">
+        <div class="container-fluid d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h5 class="mb-0 fw-bold text-primary">
+                    <i class="bi bi-file-earmark-text"></i> Mẫu C53-HD: Biên bản kiểm kê tài sản cố định
+                </h5>
+                <small class="text-muted">Đợt kiểm kê: <strong>@Model.MaDotKiemKe</strong> - Năm học: <strong>@Model.NamHoc</strong></small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" onclick="window.history.back()" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </button>
+                <button type="button" onclick="window.print()" class="btn btn-primary btn-sm px-3 fw-semibold">
+                    <i class="bi bi-printer-fill"></i> In Biên bản (Ctrl + P)
+                </button>
+            </div>
+        </div>
+        <div class="container-fluid mt-2">
+            <div class="alert alert-info py-2 px-3 mb-0 small d-flex align-items-center gap-2">
+                <i class="bi bi-info-circle-fill fs-5"></i>
+                <div>
+                    <strong>Khuyến nghị in:</strong> Vui lòng chọn hướng giấy <strong>Khổ ngang (Landscape)</strong> trong hộp thoại in của trình duyệt để toàn bộ cột bảng kiểm kê hiển thị đẹp nhất.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="print-page">
+        <!-- Tiêu đề đầu văn bản theo chuẩn Thông tư 107/2017/TT-BTC -->
+        <table style="width: 100%; border: none; margin-bottom: 15px;">
+            <tr style="border: none;">
+                <td style="border: none; width: 55%; vertical-align: top; line-height: 1.4;">
+                    <div><strong>Đơn vị:</strong> TRƯỜNG THCS PHƯỚC HÒA</div>
+                    <div><strong>Bộ phận:</strong> Ban Cơ sở vật chất & Thiết bị</div>
+                    <div><strong>Mã ĐVQHNS:</strong> 1056428</div>
+                </td>
+                <td style="border: none; width: 45%; text-align: center; vertical-align: top; line-height: 1.35;">
+                    <div style="font-weight: bold; font-size: 13px;">Mẫu số: C53 - HD</div>
+                    <div style="font-size: 11px; font-style: italic;">
+                        (Ban hành theo Thông tư số 107/2017/TT-BTC<br />
+                        ngày 10/10/2017 của Bộ Tài chính)
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <div class="text-center my-3">
+            <h4 style="font-weight: bold; margin-bottom: 4px; text-transform: uppercase;">BIÊN BẢN KIỂM KÊ TÀI SẢN CỐ ĐỊNH</h4>
+            <div style="font-style: italic; font-size: 13px;">
+                Thời điểm kiểm kê: 08 giờ 00 ngày @Model.NgayBatDau.ToString("dd") tháng @Model.NgayBatDau.ToString("MM") năm @Model.NgayBatDau.ToString("yyyy")
+            </div>
+            <div style="font-size: 12px; margin-top: 2px;">
+                Đợt kiểm kê: <strong>@Model.MaDotKiemKe</strong> &bull; Năm học: <strong>@Model.NamHoc</strong> @(Model.HocKy.HasValue ? $"&bull; Học kỳ {Model.HocKy}" : "")
+            </div>
+        </div>
+
+        <div style="line-height: 1.6; margin-bottom: 10px;">
+            <div><strong>Ban kiểm kê gồm có:</strong></div>
+            <div style="padding-left: 20px;">
+                <div>- Ông/Bà: <strong>@(Model.NguoiChuTri?.HoTen ?? "Ban Giám Hiệu")</strong> &mdash; Chức vụ: <strong>Trưởng ban kiểm kê</strong></div>
+                <div>- Ông/Bà: <strong>Đại diện Tổ Kế toán</strong> &mdash; Chức vụ: <strong>Ủy viên</strong></div>
+                <div>- Ông/Bà: <strong>Đại diện Cán bộ Thiết bị / CSVC</strong> &mdash; Chức vụ: <strong>Ủy viên thư ký</strong></div>
+            </div>
+            <div class="mt-1">
+                Đã tiến hành kiểm kê tài sản cố định, thiết bị dạy học và cơ sở vật chất, kết quả như sau:
+            </div>
+        </div>
+
+        <!-- Bảng danh mục kiểm kê chi tiết C53-HD -->
+        <table class="table-c53">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 30px;">STT</th>
+                    <th rowspan="2">Tên tài sản, thiết bị</th>
+                    <th rowspan="2" style="width: 75px;">Mã số</th>
+                    <th rowspan="2" style="width: 100px;">Nơi sử dụng (Phòng)</th>
+                    <th colspan="2">Theo sổ kế toán</th>
+                    <th colspan="2">Theo kiểm kê</th>
+                    <th colspan="2">Chênh lệch</th>
+                    <th colspan="2">Đánh giá phẩm chất</th>
+                    <th rowspan="2" style="width: 75px;">Ghi chú</th>
+                </tr>
+                <tr>
+                    <th style="width: 45px;">SL</th>
+                    <th style="width: 75px;">Giá trị (đ)</th>
+                    <th style="width: 45px;">SL</th>
+                    <th style="width: 75px;">Giá trị (đ)</th>
+                    <th style="width: 45px;">Thừa</th>
+                    <th style="width: 45px;">Thiếu</th>
+                    <th style="width: 55px;">Còn tốt</th>
+                    <th style="width: 55px;">Kém/Hỏng</th>
+                </tr>
+                <tr style="font-size: 10px; text-align: center; font-style: italic; background-color: #f8fafc;">
+                    <th>A</th>
+                    <th>B</th>
+                    <th>C</th>
+                    <th>D</th>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>3</th>
+                    <th>4</th>
+                    <th>5</th>
+                    <th>6</th>
+                    <th>7</th>
+                    <th>8</th>
+                    <th>9</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!chiTiets.Any())
+                {
+                    <tr>
+                        <td colspan="13" class="text-center py-3 text-muted">Chưa có chi tiết kiểm kê nào được ghi nhận.</td>
+                    </tr>
+                }
+                else
+                {
+                    int stt = 1;
+                    foreach (var item in chiTiets)
+                    {
+                        var tb = item.ThietBi;
+                        var giaMua = tb?.GiaMua ?? 0;
+                        var tongGiaSoItem = giaMua * item.SoLuongSoSach;
+                        var tongGiaThucItem = giaMua * item.SoLuongThucTe;
+                        var isThua = item.ChenhLech > 0;
+                        var isThieu = item.ChenhLech < 0;
+                        var isTot = (item.PhanLoai != null && item.PhanLoai.Contains("tốt")) || tb?.TinhTrang == "Đang sử dụng" || tb?.TinhTrang == "Còn tốt";
+
+                        <tr>
+                            <td class="text-center">@stt</td>
+                            <td>
+                                <strong>@(tb?.TenTb ?? "-")</strong>
+                                @if (tb?.LoaiThietBi != null)
+                                {
+                                    <div style="font-size: 10px; color: #475569;">(@tb.LoaiThietBi.TenLoaiTB)</div>
+                                }
+                            </td>
+                            <td class="text-center font-monospace" style="font-size: 11px;">@(tb?.MaTb ?? "-")</td>
+                            <td>@(tb?.Phong?.TenPhong ?? "-")</td>
+                            <td class="text-center">@item.SoLuongSoSach</td>
+                            <td class="text-end">@(tongGiaSoItem > 0 ? tongGiaSoItem.ToString("N0") : "-")</td>
+                            <td class="text-center fw-bold">@item.SoLuongThucTe</td>
+                            <td class="text-end">@(tongGiaThucItem > 0 ? tongGiaThucItem.ToString("N0") : "-")</td>
+                            <td class="text-center text-success">@(isThua ? item.ChenhLech.ToString() : "-")</td>
+                            <td class="text-center text-danger">@(isThieu ? Math.Abs(item.ChenhLech).ToString() : "-")</td>
+                            <td class="text-center">@(isTot ? "X" : "")</td>
+                            <td class="text-center">@(!isTot ? "X" : "")</td>
+                            <td style="font-size: 11px;">@(string.IsNullOrWhiteSpace(item.DeXuatXuLy) ? "-" : item.DeXuatXuLy)</td>
+                        </tr>
+                        stt++;
+                    }
+                }
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: bold; background-color: #f1f5f9;">
+                    <td colspan="4" class="text-center">TỔNG CỘNG</td>
+                    <td class="text-center">@tongSlSo</td>
+                    <td class="text-end">@(tongGiaSo > 0 ? tongGiaSo.ToString("N0") : "-")</td>
+                    <td class="text-center">@tongSlThuc</td>
+                    <td class="text-end">@(tongGiaThuc > 0 ? tongGiaThuc.ToString("N0") : "-")</td>
+                    <td class="text-center text-success">@(tongThua > 0 ? tongThua.ToString() : "-")</td>
+                    <td class="text-center text-danger">@(tongThieu > 0 ? tongThieu.ToString() : "-")</td>
+                    <td colspan="3"></td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <!-- Nhận xét và kiến nghị của ban kiểm kê -->
+        <div style="line-height: 1.6; margin-top: 15px;">
+            <div><strong>Nhận xét, đánh giá của ban kiểm kê:</strong></div>
+            <div style="padding-left: 15px; font-style: italic;">
+                - Tình hình quản lý và bảo quản tài sản: Các phòng học, phòng chức năng và bộ môn cơ bản quản lý, sử dụng đúng mục đích theo quy định.<br />
+                - Các trường hợp chênh lệch (nếu có): Đã lập biên bản giải trình nguyên nhân và cập nhật số liệu theo quy định kiểm kê tài sản nhà nước.
+            </div>
+        </div>
+
+        <!-- Chữ ký xác nhận các bên -->
+        <table style="width: 100%; border: none; margin-top: 25px; page-break-inside: avoid;">
+            <tr style="border: none;">
+                <td colspan="3" style="border: none; text-align: right; font-style: italic; padding-bottom: 10px;">
+                    Phước Hòa, ngày @Model.NgayKetThuc.ToString("dd") tháng @Model.NgayKetThuc.ToString("MM") năm @Model.NgayKetThuc.ToString("yyyy")
+                </td>
+            </tr>
+            <tr style="border: none; font-weight: bold; text-align: center; vertical-align: top;">
+                <td style="border: none; width: 33%;">
+                    NGƯỜI LẬP BIỂU<br />
+                    <span style="font-weight: normal; font-style: italic; font-size: 11px;">(Ký, ghi rõ họ tên)</span>
+                    <div style="height: 65px;"></div>
+                </td>
+                <td style="border: none; width: 34%;">
+                    KẾ TOÁN TRƯỞNG<br />
+                    <span style="font-weight: normal; font-style: italic; font-size: 11px;">(Ký, ghi rõ họ tên)</span>
+                    <div style="height: 65px;"></div>
+                </td>
+                <td style="border: none; width: 33%;">
+                    TRƯỞNG BAN KIỂM KÊ<br />
+                    <span style="font-weight: normal; font-style: italic; font-size: 11px;">(Ký, đóng dấu, ghi rõ họ tên)</span>
+                    <div style="height: 65px;"></div>
+                    <div style="font-weight: bold;">@(Model.NguoiChuTri?.HoTen ?? "")</div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</body>
+</html>

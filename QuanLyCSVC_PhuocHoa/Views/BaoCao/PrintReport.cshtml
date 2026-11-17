@@ -1,0 +1,484 @@
+@model QuanLyCSVC_PhuocHoa.Models.ViewModels.BaoCaoViewModel
+@{
+    Layout = null;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Báo cáo Tổng hợp Cơ sở vật chất - THCS Phước Hòa</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --report-bg: #e2e8f0;
+            --paper-shadow: 0 12px 35px -8px rgba(15, 23, 42, 0.2), 0 4px 12px rgba(15, 23, 42, 0.08);
+        }
+
+        body {
+            background-color: var(--report-bg);
+            margin: 0;
+            padding: 0;
+            color: #000000;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Thanh điều khiển trên cùng (Preview Toolbar) */
+        .preview-toolbar {
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #0b1329 0%, #172554 100%);
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+        }
+
+        .preview-toolbar-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .preview-toolbar-badge {
+            background: rgba(59, 130, 246, 0.25);
+            border: 1px solid rgba(147, 197, 253, 0.4);
+            color: #bfdbfe;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .btn-toolbar-print {
+            background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            font-weight: 600;
+            font-size: 0.88rem;
+            padding: 0.45rem 1.15rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .btn-toolbar-print:hover {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+            color: #ffffff;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.5);
+        }
+
+        .btn-toolbar-secondary {
+            background: rgba(255, 255, 255, 0.12);
+            color: #ffffff;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            font-weight: 500;
+            font-size: 0.88rem;
+            padding: 0.45rem 0.95rem;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+
+        .btn-toolbar-secondary:hover {
+            background: rgba(255, 255, 255, 0.22);
+            color: #ffffff;
+        }
+
+        /* Khổ giấy A4 Chuẩn */
+        .a4-wrapper {
+            padding: 24px 12px 60px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .a4-sheet {
+            background: #ffffff;
+            width: 210mm;
+            min-height: 297mm;
+            padding: 20mm 20mm 20mm 25mm; /* Lề chuẩn NĐ 30: Trái 25-30mm, Trên/Dưới/Phải 15-20mm */
+            box-shadow: var(--paper-shadow);
+            border-radius: 4px;
+            font-family: 'Times New Roman', Times, serif;
+            font-size: 13.5pt;
+            line-height: 1.35;
+            color: #000000;
+            box-sizing: border-box;
+            position: relative;
+        }
+
+        /* Tiêu đề Quốc hiệu & Đơn vị */
+        .report-header-grid {
+            display: grid;
+            grid-template-columns: 44% 56%;
+            margin-bottom: 24px;
+            align-items: start;
+        }
+
+        .dept-title {
+            text-align: center;
+            font-size: 11.5pt;
+            line-height: 1.25;
+        }
+
+        .dept-title strong {
+            font-size: 12pt;
+        }
+
+        .dept-divider {
+            width: 80px;
+            height: 1px;
+            background-color: #000000;
+            margin: 4px auto 6px;
+        }
+
+        .doc-number {
+            font-size: 11pt;
+            margin-top: 3px;
+        }
+
+        .motto-box {
+            text-align: center;
+            line-height: 1.25;
+        }
+
+        .motto-box .republic {
+            font-weight: 700;
+            font-size: 11.5pt;
+            letter-spacing: 0.2px;
+        }
+
+        .motto-box .independence {
+            font-weight: 700;
+            font-size: 12pt;
+            margin-top: 2px;
+        }
+
+        .motto-divider {
+            width: 140px;
+            height: 1px;
+            background-color: #000000;
+            margin: 4px auto 6px;
+        }
+
+        .doc-date {
+            font-style: italic;
+            font-size: 12pt;
+            margin-top: 4px;
+        }
+
+        .main-title-block {
+            text-align: center;
+            margin: 18px 0 24px;
+        }
+
+        .main-title-block h1 {
+            font-size: 15pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin: 0 0 6px;
+            letter-spacing: 0.3px;
+            line-height: 1.3;
+        }
+
+        .main-title-block .sub-meta {
+            font-style: italic;
+            font-size: 12pt;
+        }
+
+        /* Các bảng số liệu báo cáo */
+        .section-heading {
+            font-weight: 700;
+            font-size: 13pt;
+            margin: 18px 0 8px;
+            text-transform: uppercase;
+        }
+
+        .report-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 18px;
+            font-size: 11pt;
+        }
+
+        .report-table th,
+        .report-table td {
+            border: 1px solid #000000;
+            padding: 5px 7px;
+            vertical-align: middle;
+        }
+
+        .report-table thead th {
+            text-align: center;
+            font-weight: 700;
+            background-color: #f1f5f9;
+        }
+
+        .report-table tfoot td {
+            font-weight: 700;
+            background-color: #f8fafc;
+        }
+
+        .summary-kpi-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 18px;
+            font-size: 11.5pt;
+        }
+
+        .summary-kpi-table td {
+            border: 1px solid #000000;
+            padding: 6px 10px;
+        }
+
+        /* Chữ ký 3 bên chuẩn */
+        .signature-section {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 36px;
+            page-break-inside: avoid;
+            text-align: center;
+        }
+
+        .sig-col {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 140px;
+        }
+
+        .sig-role {
+            font-weight: 700;
+            font-size: 11.5pt;
+            text-transform: uppercase;
+        }
+
+        .sig-sub {
+            font-style: italic;
+            font-size: 10pt;
+            margin-top: 2px;
+        }
+
+        .sig-name {
+            font-weight: 700;
+            font-size: 11.5pt;
+            margin-top: 75px;
+        }
+
+        /* Quy tắc In ấn chuẩn */
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+
+            body {
+                background: #ffffff !important;
+            }
+
+            .a4-wrapper {
+                padding: 0 !important;
+            }
+
+            .a4-sheet {
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                width: 100% !important;
+                min-height: auto !important;
+                padding: 0 !important;
+                margin: 0 !important;
+            }
+
+            .report-table thead th {
+                background-color: #f0f0f0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            @@page {
+                size: A4 portrait;
+                margin: 18mm 15mm 18mm 20mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Thanh thao tác trên cùng dành cho chế độ xem trước (Ẩn khi in thực tế) -->
+    <div class="preview-toolbar no-print">
+        <div class="preview-toolbar-title">
+            <a asp-action="Index" class="btn-toolbar-secondary">
+                <i class="bi bi-arrow-left"></i> Quay lại
+            </a>
+            <div>
+                <strong class="fs-6 d-block">Báo cáo Tổng hợp Cơ sở vật chất &bull; Năm học 2025 - 2026</strong>
+                <span class="preview-toolbar-badge"><i class="bi bi-shield-check me-1"></i> Biểu mẫu chuẩn hành chính (NĐ 30/2020/NĐ-CP)</span>
+            </div>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <a asp-action="ExportExcel" class="btn-toolbar-secondary" title="Tải file Excel">
+                <i class="bi bi-file-earmark-excel text-success"></i> Xuất Excel
+            </a>
+            <button type="button" class="btn btn-toolbar-print" onclick="window.print()">
+                <i class="bi bi-printer-fill me-1"></i> In Báo cáo (Ctrl + P)
+            </button>
+            <button type="button" class="btn-toolbar-secondary" onclick="window.close()" title="Đóng cửa sổ">
+                <i class="bi bi-x-lg"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Trang giấy A4 mô phỏng thực tế -->
+    <div class="a4-wrapper">
+        <div class="a4-sheet">
+
+            <!-- Quốc hiệu & Đơn vị theo quy chuẩn thể thức văn bản -->
+            <div class="report-header-grid">
+                <div class="dept-title">
+                    <div>PHÒNG GD&amp;ĐT HUYỆN PHÚ GIÁO</div>
+                    <strong>TRƯỜNG THCS PHƯỚC HÒA</strong>
+                    <div class="dept-divider"></div>
+                    <div class="doc-number">Số: &hellip;&hellip; /BC-THCSPH</div>
+                </div>
+                <div class="motto-box">
+                    <div class="republic">CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM</div>
+                    <div class="independence">Độc lập - Tự do - Hạnh phúc</div>
+                    <div class="motto-divider"></div>
+                    <div class="doc-date">Phước Hòa, ngày @DateTime.Now.Day tháng @DateTime.Now.Month năm @DateTime.Now.Year</div>
+                </div>
+            </div>
+
+            <!-- Tiêu đề chính của văn bản -->
+            <div class="main-title-block">
+                <h1>BÁO CÁO TỔNG HỢP TÌNH HÌNH CƠ SỞ VẬT CHẤT<br />VÀ THIẾT BỊ DẠY HỌC NĂM HỌC 2025 - 2026</h1>
+                <div class="sub-meta">Thời điểm chốt số liệu: @DateTime.Now.ToString("dd/MM/yyyy HH:mm")</div>
+            </div>
+
+            <!-- Phần I: Số liệu tổng hợp cơ sở vật chất -->
+            <div class="section-heading">I. TỔNG HỢP CHỈ SỐ CƠ SỞ VẬT CHẤT TOÀN TRƯỜNG</div>
+            <table class="summary-kpi-table">
+                <tbody>
+                    <tr>
+                        <td style="width: 38%;"><strong>1. Tổng số phòng học &amp; phòng chức năng:</strong></td>
+                        <td style="width: 14%; text-align: center; font-weight: bold;">@Model.TongPhong phòng</td>
+                        <td style="width: 36%;"><strong>2. Tổng số thiết bị đang quản lý:</strong></td>
+                        <td style="width: 12%; text-align: center; font-weight: bold;">@Model.TongThietBi thiết bị</td>
+                    </tr>
+                    <tr>
+                        <td><strong>3. Tổng nguyên giá tài sản:</strong></td>
+                        <td style="text-align: right; font-weight: bold;">@Model.TongNguyenGia.ToString("N0") đ</td>
+                        <td><strong>4. Hao mòn lũy kế (TT 45/2018/TT-BTC):</strong></td>
+                        <td style="text-align: right;">@Model.TongHaoMonLuyKe.ToString("N0") đ</td>
+                    </tr>
+                    <tr>
+                        <td><strong>5. Giá trị còn lại theo sổ sách:</strong></td>
+                        <td style="text-align: right; font-weight: bold;">@Model.TongGiaTriConLai.ToString("N0") đ</td>
+                        <td><strong>6. Tổng kinh phí bảo trì đã thực hiện:</strong></td>
+                        <td style="text-align: right;">@Model.TongChiPhiBaoTri.ToString("N0") đ</td>
+                    </tr>
+                    <tr>
+                        <td><strong>7. Tổng lượt mượn thiết bị dạy học:</strong></td>
+                        <td style="text-align: center; font-weight: bold;">@Model.TongLuotMuon lượt</td>
+                        <td><strong>8. Thiết bị đề xuất thanh lý / thay thế:</strong></td>
+                        <td style="text-align: center; font-weight: bold;">@Model.SoThietBiCanThanhLy thiết bị</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Phần II: Chi tiết tài sản theo phòng học -->
+            <div class="section-heading">II. CHI TIẾT CƠ SỞ VẬT CHẤT THEO TỪNG PHÒNG HỌC &amp; KHU CHỨC NĂNG</div>
+            <table class="report-table">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">STT</th>
+                        <th style="width: 80px;">Mã phòng</th>
+                        <th>Tên phòng học / Khu chức năng</th>
+                        <th style="width: 100px;">Loại phòng</th>
+                        <th style="width: 110px;">Phụ trách</th>
+                        <th style="width: 65px;">Số loại TB</th>
+                        <th style="width: 65px;">Tổng SL</th>
+                        <th style="width: 110px;">Tổng nguyên giá (đ)</th>
+                        <th style="width: 110px;">Giá trị còn lại (đ)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{ int stt = 1; }
+                    @foreach (var p in Model.ThongKeTheoPhong)
+                    {
+                        <tr>
+                            <td style="text-align: center;">@(stt++)</td>
+                            <td style="text-align: center; font-weight: bold;">@p.MaPhong</td>
+                            <td>@p.TenPhong</td>
+                            <td>@p.LoaiPhong</td>
+                            <td>@p.NguoiPhuTrach</td>
+                            <td style="text-align: center;">@p.SoChungLoai</td>
+                            <td style="text-align: center; font-weight: bold;">@p.TongSoLuong</td>
+                            <td style="text-align: right;">@p.TongGiaTri.ToString("N0")</td>
+                            <td style="text-align: right;">@p.GiaTriConLai.ToString("N0")</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <td colspan="5" style="text-align: center; text-transform: uppercase;">TỔNG CỘNG TOÀN TRƯỜNG:</td>
+                        <td style="text-align: center;">@Model.ThongKeTheoPhong.Sum(x => x.SoChungLoai)</td>
+                        <td style="text-align: center;">@Model.ThongKeTheoPhong.Sum(x => x.TongSoLuong)</td>
+                        <td style="text-align: right;">@Model.ThongKeTheoPhong.Sum(x => x.TongGiaTri).ToString("N0")</td>
+                        <td style="text-align: right;">@Model.ThongKeTheoPhong.Sum(x => x.GiaTriConLai).ToString("N0")</td>
+                    </tr>
+                </tfoot>
+            </table>
+
+            <!-- Phần III: Đánh giá và kiến nghị -->
+            <div class="section-heading">III. ĐÁNH GIÁ TỔNG QUAN VÀ KIẾN NGHỊ</div>
+            <div style="font-size: 12pt; text-align: justify; line-height: 1.5; margin-bottom: 24px;">
+                <p style="margin-bottom: 6px;"><strong>1. Đánh giá tình hình sử dụng:</strong> Cơ sở vật chất và danh mục trang thiết bị dạy học hiện có cơ bản đáp ứng đủ yêu cầu triển khai chương trình Giáo dục Phổ thông 2018 cho các khối lớp 6, 7, 8 và 9. Tỷ lệ thiết bị hoạt động tốt đạt trên 88%, công tác mượn trả và bảo quản tài sản tại các phòng bộ môn được thực hiện nghiêm túc, đúng quy chế.</p>
+                <p style="margin-bottom: 6px;"><strong>2. Công tác duy tu, bảo dưỡng:</strong> Các hệ thống máy tính phòng tin học, máy chiếu, hóa chất và dụng cụ thí nghiệm thực hành bộ môn Khoa học tự nhiên đã được kiểm tra, bảo trì định kỳ trước mỗi học kỳ, hạn chế tối đa hỏng hóc phát sinh trong giờ dạy.</p>
+                <p style="margin-bottom: 0;"><strong>3. Kiến nghị và đề xuất:</strong> Kính đề nghị Ban Giám Hiệu xem xét phê duyệt danh mục @Model.SoThietBiCanThanhLy thiết bị đã hết thời hạn khấu hao theo quy định hoặc hư hỏng nặng không còn khả năng phục hồi để tiến hành thủ tục thanh lý; đồng thời có phương án bổ sung trang thiết bị số hóa và màn hình tương tác phục vụ nâng cao chất lượng dạy học trong giai đoạn tiếp theo.</p>
+            </div>
+
+            <!-- Chữ ký 3 bên theo quy chuẩn -->
+            <div class="signature-section">
+                <div class="sig-col">
+                    <div>
+                        <div class="sig-role">NGƯỜI LẬP BÁO CÁO</div>
+                        <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
+                    </div>
+                    <div class="sig-name">Nhân viên Thiết bị</div>
+                </div>
+                <div class="sig-col">
+                    <div>
+                        <div class="sig-role">PHỤ TRÁCH KẾ TOÁN</div>
+                        <div class="sig-sub">(Ký, ghi rõ họ tên)</div>
+                    </div>
+                    <div class="sig-name">Kế toán trưởng</div>
+                </div>
+                <div class="sig-col">
+                    <div>
+                        <div class="sig-role">HIỆU TRƯỞNG</div>
+                        <div class="sig-sub">(Ký tên, đóng dấu)</div>
+                    </div>
+                    <div class="sig-name">Ban Giám Hiệu</div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+</body>
+</html>

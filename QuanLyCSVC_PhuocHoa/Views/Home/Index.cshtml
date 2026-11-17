@@ -1,101 +1,192 @@
-﻿@model QuanLyCSVC_PhuocHoa.Models.ViewModels.DashboardViewModel
+@model QuanLyCSVC_PhuocHoa.Models.ViewModels.DashboardViewModel
 @{
     ViewData["Title"] = "Tổng quan";
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-        <h2 class="mb-0"><i class="bi bi-speedometer2 text-primary"></i> Bảng điều khiển</h2>
-        <p class="text-muted mb-0">Trường THCS Phước Hòa - Năm học 2025-2026</p>
+<!-- Hero Welcome Card -->
+<div class="hero-dashboard-card mb-4">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <div class="d-flex align-items-center gap-2 mb-2">
+                <span class="badge bg-primary text-white px-2 py-1"><i class="bi bi-mortarboard-fill me-1"></i> Năm học 2025 - 2026</span>
+                <span class="text-white-50 small">&bull; Trường THCS Phước Hòa, Phú Giáo, Bình Dương</span>
+            </div>
+            <h2 class="fw-bold mb-1 text-white">
+                Xin chào, @(User.Identity?.Name ?? "Quản trị viên")! 👋
+            </h2>
+            <p class="text-white-50 mb-0" style="max-width: 650px;">
+                Hệ thống Quản lý Cơ sở vật chất &amp; Thiết bị dạy học đang hoạt động ổn định. Dưới đây là bảng tổng hợp các chỉ số tài sản, tình trạng phòng học và lịch mượn trả thiết bị trong ngày.
+            </p>
+        </div>
+        <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+            <div class="d-inline-flex flex-wrap gap-2">
+                <button type="button" class="btn btn-outline-light bg-white text-dark shadow-sm" data-bs-toggle="modal" data-bs-target="#qrScannerModal">
+                    <i class="bi bi-qr-code-scan text-primary"></i> Quét mã QR
+                </button>
+                <a asp-controller="PhieuBaoTri" asp-action="Create" class="btn btn-warning text-dark fw-bold shadow-sm">
+                    <i class="bi bi-exclamation-triangle-fill"></i> Báo hỏng thiết bị
+                </a>
+            </div>
+        </div>
     </div>
 </div>
 
+<!-- 5 Thẻ thống kê KPI chính -->
 <div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="card stat-card border-0 shadow-sm">
+    <div class="col-sm-6 col-lg">
+        <div class="card stat-card accent-primary border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-muted mb-1">Tổng thiết bị</p>
-                        <h3 class="mb-0">@Model.TongThietBi</h3>
+                        <p class="text-muted small mb-1 fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">TỔNG THIẾT BỊ</p>
+                        <h3 class="mb-0 fw-bold text-dark font-monospace">@Model.TongThietBi</h3>
+                        <small class="text-success small fw-semibold"><i class="bi bi-check-circle me-1"></i>Đã dán tem QR</small>
                     </div>
-                    <div class="stat-icon bg-primary-subtle text-primary"><i class="bi bi-pc-display"></i></div>
+                    <div class="stat-icon primary"><i class="bi bi-pc-display"></i></div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card stat-card border-0 shadow-sm">
+    <div class="col-sm-6 col-lg">
+        <div class="card stat-card accent-info border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-muted mb-1">Tổng phòng</p>
-                        <h3 class="mb-0">@Model.TongPhong</h3>
+                        <p class="text-muted small mb-1 fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">TỔNG PHÒNG HỌC</p>
+                        <h3 class="mb-0 fw-bold text-dark font-monospace">@Model.TongPhong</h3>
+                        <small class="text-muted small">Phòng &amp; chức năng</small>
                     </div>
-                    <div class="stat-icon bg-info-subtle text-info"><i class="bi bi-door-open"></i></div>
+                    <div class="stat-icon info"><i class="bi bi-door-open"></i></div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card stat-card border-0 shadow-sm">
+    <div class="col-sm-6 col-lg">
+        <div class="card stat-card accent-success border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-muted mb-1">Giá trị tài sản</p>
-                        <h3 class="mb-0 fs-5">@Model.TongGiaTriTaiSan.ToString("N0") đ</h3>
+                        <p class="text-muted small mb-1 fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">NGUYÊN GIÁ TÀI SẢN</p>
+                        <h4 class="mb-0 fw-bold text-success font-monospace">@Model.TongGiaTriTaiSan.ToString("N0") <span class="fs-6 text-muted">đ</span></h4>
+                        <small class="text-muted small">Theo sổ sách kế toán</small>
                     </div>
-                    <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-currency-dollar"></i></div>
+                    <div class="stat-icon success"><i class="bi bi-cash-stack"></i></div>
                 </div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="card stat-card border-0 shadow-sm">
+    <div class="col-sm-6 col-lg">
+        <div class="card stat-card accent-warning border-0 shadow-sm h-100">
             <div class="card-body">
-                <div class="d-flex justify-content-between">
+                <div class="d-flex justify-content-between align-items-center">
                     <div>
-                        <p class="text-muted mb-1">Chờ duyệt mượn</p>
-                        <h3 class="mb-0">@Model.PhieuMuonChoDuyet</h3>
+                        <p class="text-muted small mb-1 fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">CHỜ DUYỆT MƯỢN</p>
+                        <h3 class="mb-0 fw-bold text-warning font-monospace">@Model.PhieuMuonChoDuyet</h3>
+                        <small class="text-muted small">Phiếu mượn phòng/TB</small>
                     </div>
-                    <div class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-clock-history"></i></div>
+                    <div class="stat-icon warning"><i class="bi bi-clock-history"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg">
+        <div class="card stat-card accent-danger border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted small mb-1 fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">HỎNG &amp; BẢO TRÌ</p>
+                        <h3 class="mb-0 fw-bold text-danger font-monospace">@(Model.ThietBiHuHong + Model.ThietBiDangSua)</h3>
+                        <small class="text-danger small fw-semibold"><i class="bi bi-tools me-1"></i>Cần xử lý sửa chữa</small>
+                    </div>
+                    <div class="stat-icon danger"><i class="bi bi-tools"></i></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<div class="row g-3">
-    <div class="col-md-8">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white"><strong>Thiết bị theo loại</strong></div>
-            <div class="card-body">
-                <canvas id="chartLoai" height="120"></canvas>
+<!-- Lối tắt thao tác nhanh -->
+<div class="card border-0 shadow-sm mb-4" style="background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%); border: 1px solid var(--slate-200) !important;">
+    <div class="card-body py-3 px-3 px-md-4">
+        <div class="row g-2 align-items-center">
+            <div class="col-md-auto fw-bold text-dark d-flex align-items-center gap-2">
+                <span class="badge bg-primary text-white"><i class="bi bi-lightning-charge-fill"></i></span>
+                <span class="fw-bold">Thao tác nhanh:</span>
+            </div>
+            <div class="col-md d-flex flex-wrap gap-2">
+                <a asp-controller="PhieuMuon" asp-action="Create" class="btn btn-sm btn-outline-primary bg-white shadow-xs">
+                    <i class="bi bi-plus-circle text-primary"></i> Đăng ký mượn TB
+                </a>
+                <a asp-controller="PhieuBaoTri" asp-action="Create" class="btn btn-sm btn-outline-warning text-dark bg-white shadow-xs">
+                    <i class="bi bi-exclamation-triangle text-warning"></i> Báo hỏng thiết bị
+                </a>
+                <a asp-controller="DieuChuyen" asp-action="Create" class="btn btn-sm btn-outline-info text-dark bg-white shadow-xs">
+                    <i class="bi bi-arrow-left-right text-info"></i> Điều chuyển
+                </a>
+                <a asp-controller="ThietBi" asp-action="PrintLabels" target="_blank" class="btn btn-sm btn-outline-dark bg-white shadow-xs">
+                    <i class="bi bi-printer text-dark"></i> In tem QR hàng loạt
+                </a>
+                <a asp-controller="DotKiemKe" asp-action="Index" class="btn btn-sm btn-outline-success text-dark bg-white shadow-xs">
+                    <i class="bi bi-clipboard-check text-success"></i> Kiểm kê (Mẫu C53-HD)
+                </a>
+                <a asp-controller="BaoCao" asp-action="Index" class="btn btn-sm btn-outline-primary text-dark bg-white shadow-xs">
+                    <i class="bi bi-file-earmark-bar-graph text-primary"></i> Báo cáo tổng hợp
+                </a>
             </div>
         </div>
     </div>
-    <div class="col-md-4">
-        <div class="card shadow-sm">
-            <div class="card-header bg-white"><strong>Tình trạng thiết bị</strong></div>
-            <div class="card-body">
-                <ul class="list-group list-group-flush">
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span><span class="badge bg-success me-2">&nbsp;</span>Tốt</span>
-                        <strong>@Model.ThietBiTot</strong>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span><span class="badge bg-danger me-2">&nbsp;</span>Hư hỏng</span>
-                        <strong>@Model.ThietBiHuHong</strong>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span><span class="badge bg-warning me-2">&nbsp;</span>Đang sửa chữa</span>
-                        <strong>@Model.ThietBiDangSua</strong>
-                    </li>
-                    <li class="list-group-item d-flex justify-content-between">
-                        <span><span class="badge bg-secondary me-2">&nbsp;</span>Thanh lý</span>
-                        <strong>@Model.ThietBiThanhLy</strong>
-                    </li>
-                </ul>
+</div>
+
+<!-- Biểu đồ phân tích dữ liệu -->
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+                <strong class="d-flex align-items-center gap-2">
+                    <i class="bi bi-bar-chart-fill text-primary"></i>
+                    <span>Phân bổ thiết bị theo từng phân loại</span>
+                </strong>
+                <a asp-controller="ThietBi" asp-action="Index" class="btn btn-sm btn-link text-decoration-none fw-semibold">Xem chi tiết &rarr;</a>
+            </div>
+            <div class="card-body p-4">
+                <div style="height: 280px; position: relative;">
+                    <canvas id="chartLoai"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header bg-white py-3">
+                <strong class="d-flex align-items-center gap-2">
+                    <i class="bi bi-pie-chart-fill text-success"></i>
+                    <span>Tỷ lệ tình trạng thiết bị</span>
+                </strong>
+            </div>
+            <div class="card-body p-4 text-center">
+                <div style="height: 180px; position: relative;" class="mb-3">
+                    <canvas id="chartTinhTrang"></canvas>
+                </div>
+                <div class="text-start small">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                            <span><span class="status-dot active"></span> Đang sử dụng tốt</span>
+                            <strong class="font-monospace text-success fs-6">@Model.ThietBiTot</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                            <span><span class="status-dot danger"></span> Hư hỏng cần sửa</span>
+                            <strong class="font-monospace text-danger fs-6">@Model.ThietBiHuHong</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                            <span><span class="status-dot warning"></span> Đang gửi bảo trì</span>
+                            <strong class="font-monospace text-warning fs-6">@Model.ThietBiDangSua</strong>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-2">
+                            <span><span class="status-dot" style="background-color: #64748b;"></span> Đề nghị thanh lý</span>
+                            <strong class="font-monospace text-secondary fs-6">@Model.ThietBiThanhLy</strong>
+                        </li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
@@ -104,15 +195,82 @@
 @section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script>
-        const labels = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeTheoLoais.Select(x => x.TenLoai)));
-        const data = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeTheoLoais.Select(x => x.SoLuong)));
-        new Chart(document.getElementById('chartLoai'), {
+        // Cấu hình font chữ chung cho Chart.js
+        Chart.defaults.font.family = "'Plus Jakarta Sans', sans-serif";
+        Chart.defaults.color = "#64748b";
+
+        // 1. Biểu đồ cột phân loại thiết bị
+        const labelsLoai = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeTheoLoais.Select(x => x.TenLoai)));
+        const dataLoai = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.ThongKeTheoLoais.Select(x => x.SoLuong)));
+
+        const ctxLoai = document.getElementById('chartLoai').getContext('2d');
+        const gradientPrimary = ctxLoai.createLinearGradient(0, 0, 0, 250);
+        gradientPrimary.addColorStop(0, '#2563eb');
+        gradientPrimary.addColorStop(1, '#60a5fa');
+
+        new Chart(ctxLoai, {
             type: 'bar',
             data: {
-                labels: labels,
-                datasets: [{ label: 'Số lượng', data: data, backgroundColor: '#0d6efd' }]
+                labels: labelsLoai,
+                datasets: [{
+                    label: 'Số lượng thiết bị',
+                    data: dataLoai,
+                    backgroundColor: gradientPrimary,
+                    borderRadius: 6,
+                    borderSkipped: false
+                }]
             },
-            options: { responsive: true, plugins: { legend: { display: false } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        titleFont: { weight: 'bold' },
+                        padding: 10,
+                        cornerRadius: 8
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false }
+                    },
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f1f5f9' },
+                        ticks: { stepSize: 5 }
+                    }
+                }
+            }
+        });
+
+        // 2. Biểu đồ tròn Doughnut tình trạng thiết bị
+        new Chart(document.getElementById('chartTinhTrang'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Tốt', 'Hư hỏng', 'Đang sửa', 'Thanh lý'],
+                datasets: [{
+                    data: [@Model.ThietBiTot, @Model.ThietBiHuHong, @Model.ThietBiDangSua, @Model.ThietBiThanhLy],
+                    backgroundColor: ['#10b981', '#ef4444', '#f59e0b', '#64748b'],
+                    borderWidth: 3,
+                    borderColor: '#ffffff',
+                    hoverOffset: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: '#0f172a',
+                        padding: 10,
+                        cornerRadius: 8
+                    }
+                },
+                cutout: '72%'
+            }
         });
     </script>
 }

@@ -1,0 +1,258 @@
+@model PhieuNhap
+@{
+    Layout = null;
+    var chiTiets = Model.ChiTietPhieuNhap.ToList();
+    var tongTien = Model.TongTien;
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Phiếu nhập kho C30-HD - @Model.MaPhieuNhap</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <style>
+        body {
+            background-color: #f8fafc;
+            font-family: 'Times New Roman', Times, serif;
+            color: #000000;
+            margin: 0;
+            padding: 0;
+            font-size: 13.5px;
+        }
+
+        .action-bar {
+            background: #ffffff;
+            border-bottom: 1px solid #cbd5e1;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+        }
+
+        .print-page {
+            background: #ffffff;
+            max-width: 880px;
+            margin: 20px auto;
+            padding: 35px 50px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+
+        .table-c30 {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 15px;
+        }
+
+        .table-c30 th, .table-c30 td {
+            border: 1px solid #000000;
+            padding: 6px 8px;
+            vertical-align: middle;
+            font-size: 13px;
+        }
+
+        .table-c30 th {
+            text-align: center;
+            font-weight: bold;
+            background-color: #f1f5f9;
+        }
+
+        @@media print {
+            .no-print {
+                display: none !important;
+            }
+            body {
+                background: #ffffff !important;
+            }
+            .print-page {
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+            }
+            .table-c30 th {
+                background-color: #ffffff !important;
+            }
+            @@page {
+                size: A4 portrait;
+                margin: 15mm 12mm 15mm 12mm;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Thanh thao tác in ấn -->
+    <div class="action-bar py-3 no-print">
+        <div class="container d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <h5 class="mb-0 fw-bold text-success">
+                    <i class="bi bi-file-earmark-check"></i> Mẫu C30-HD: Phiếu nhập kho tài sản / thiết bị
+                </h5>
+                <small class="text-muted">Mã phiếu: <strong>@Model.MaPhieuNhap</strong> - Ngày nhập: <strong>@Model.NgayNhap.ToString("dd/MM/yyyy")</strong></small>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <button type="button" onclick="window.history.back()" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-arrow-left"></i> Quay lại
+                </button>
+                <button type="button" onclick="window.print()" class="btn btn-primary btn-sm px-3 fw-semibold">
+                    <i class="bi bi-printer-fill"></i> In phiếu nhập (Ctrl + P)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="print-page">
+        <!-- Đầu biểu mẫu C30-HD -->
+        <table style="width: 100%; border: none; margin-bottom: 15px;">
+            <tr style="border: none;">
+                <td style="border: none; width: 55%; vertical-align: top; line-height: 1.4;">
+                    <div><strong>Đơn vị:</strong> TRƯỜNG THCS PHƯỚC HÒA</div>
+                    <div><strong>Bộ phận:</strong> Ban Cơ sở vật chất & Thiết bị</div>
+                    <div><strong>Mã ĐVQHNS:</strong> 1056428</div>
+                </td>
+                <td style="border: none; width: 45%; text-align: center; vertical-align: top; line-height: 1.35;">
+                    <div style="font-weight: bold; font-size: 13px;">Mẫu số: C30 - HD</div>
+                    <div style="font-size: 11px; font-style: italic;">
+                        (Ban hành theo Thông tư số 107/2017/TT-BTC<br />
+                        ngày 10/10/2017 của Bộ Tài chính)
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <div class="text-center my-3">
+            <h4 style="font-weight: bold; margin-bottom: 2px; text-transform: uppercase;">PHIẾU NHẬP KHO</h4>
+            <div style="font-style: italic; font-size: 13px;">
+                Ngày @Model.NgayNhap.ToString("dd") tháng @Model.NgayNhap.ToString("MM") năm @Model.NgayNhap.ToString("yyyy")
+            </div>
+            <div style="font-size: 12px; margin-top: 2px;">
+                Số: <strong>@Model.MaPhieuNhap</strong>
+            </div>
+        </div>
+
+        <div style="line-height: 1.7; margin-bottom: 10px;">
+            <div>- Họ và tên người giao hàng: <strong>@(Model.NhaCungCap?.NguoiDaiDien ?? Model.NhaCungCap?.TenNCC ?? "-")</strong></div>
+            <div>- Theo Hóa đơn / Hợp đồng cung cấp của: <strong>@(Model.NhaCungCap?.TenNCC ?? "-")</strong></div>
+            <div>- Địa chỉ nhà cung cấp: @(Model.NhaCungCap?.DiaChi ?? "-") &bull; SĐT: @(Model.NhaCungCap?.Sdt ?? "-")</div>
+            <div>- Nhập tại kho: <strong>Kho Thiết bị dạy học - Trường THCS Phước Hòa</strong></div>
+            <div>- Người phụ trách tiếp nhận: <strong>@(Model.NguoiNhap?.HoTen ?? "-")</strong></div>
+            @if (!string.IsNullOrWhiteSpace(Model.GhiChu))
+            {
+                <div>- Ghi chú: <em>@Model.GhiChu</em></div>
+            }
+        </div>
+
+        <!-- Bảng chi tiết vật tư nhập kho C30-HD -->
+        <table class="table-c30">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 35px;">STT</th>
+                    <th rowspan="2">Tên, nhãn hiệu, quy cách phẩm chất thiết bị</th>
+                    <th rowspan="2" style="width: 85px;">Mã số</th>
+                    <th rowspan="2" style="width: 50px;">ĐVT</th>
+                    <th colspan="2">Số lượng</th>
+                    <th rowspan="2" style="width: 100px;">Đơn giá (đ)</th>
+                    <th rowspan="2" style="width: 110px;">Thành tiền (đ)</th>
+                </tr>
+                <tr>
+                    <th style="width: 65px;">Chứng từ</th>
+                    <th style="width: 65px;">Thực nhập</th>
+                </tr>
+                <tr style="font-size: 10.5px; text-align: center; font-style: italic; background-color: #f8fafc;">
+                    <th>A</th>
+                    <th>B</th>
+                    <th>C</th>
+                    <th>D</th>
+                    <th>1</th>
+                    <th>2</th>
+                    <th>3</th>
+                    <th>4</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int stt = 1;
+                    foreach (var item in chiTiets)
+                    {
+                        var tb = item.ThietBi;
+                        <tr>
+                            <td class="text-center">@stt</td>
+                            <td>
+                                <strong>@(tb?.TenTb ?? "-")</strong>
+                                @if (tb?.LoaiThietBi != null)
+                                {
+                                    <div style="font-size: 11px; color: #475569;">(@tb.LoaiThietBi.TenLoaiTB)</div>
+                                }
+                            </td>
+                            <td class="text-center font-monospace">@(tb?.MaTb ?? "-")</td>
+                            <td class="text-center">@(tb?.DonViTinh ?? "Cái")</td>
+                            <td class="text-center">@item.SoLuong</td>
+                            <td class="text-center fw-bold">@item.SoLuong</td>
+                            <td class="text-end">@item.DonGia.ToString("N0")</td>
+                            <td class="text-end fw-bold">@item.ThanhTien.ToString("N0")</td>
+                        </tr>
+                        stt++;
+                    }
+                }
+            </tbody>
+            <tfoot>
+                <tr style="font-weight: bold; background-color: #f1f5f9;">
+                    <td colspan="4" class="text-center">CỘNG</td>
+                    <td class="text-center">@chiTiets.Sum(c => c.SoLuong)</td>
+                    <td class="text-center">@chiTiets.Sum(c => c.SoLuong)</td>
+                    <td></td>
+                    <td class="text-end text-success fs-6">@tongTien.ToString("N0") đ</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        <div style="line-height: 1.7; margin-top: 10px;">
+            <div>- Tổng số tiền (viết bằng số): <strong>@tongTien.ToString("N0") đồng</strong></div>
+            <div style="font-style: italic;">
+                - Chứng từ gốc kèm theo: Hóa đơn GTGT, Biên bản kiểm định chất lượng bàn giao kỹ thuật của nhà cung cấp.
+            </div>
+        </div>
+
+        <!-- Chữ ký các bên -->
+        <table style="width: 100%; border: none; margin-top: 30px; page-break-inside: avoid;">
+            <tr style="border: none;">
+                <td colspan="4" style="border: none; text-align: right; font-style: italic; padding-bottom: 10px;">
+                    Phước Hòa, ngày @Model.NgayNhap.ToString("dd") tháng @Model.NgayNhap.ToString("MM") năm @Model.NgayNhap.ToString("yyyy")
+                </td>
+            </tr>
+            <tr style="border: none; font-weight: bold; text-align: center; vertical-align: top;">
+                <td style="border: none; width: 25%;">
+                    NGƯỜI LẬP PHIẾU<br />
+                    <span style="font-weight: normal; font-style: italic; font-size: 11px;">(Ký, họ tên)</span>
+                    <div style="height: 65px;"></div>
+                    <div>@(Model.NguoiNhap?.HoTen ?? "")</div>
+                </td>
+                <td style="border: none; width: 25%;">
+                    NGƯỜI GIAO HÀNG<br />
+                    <span style="font-weight: normal; font-style: italic; font-size: 11px;">(Ký, họ tên)</span>
+                    <div style="height: 65px;"></div>
+                    <div>@(Model.NhaCungCap?.NguoiDaiDien ?? "")</div>
+                </td>
+                <td style="border: none; width: 25%;">
+                    THỦ KHO / CSVC<br />
+                    <span style="font-weight: normal; font-style: italic; font-size: 11px;">(Ký, họ tên)</span>
+                    <div style="height: 65px;"></div>
+                </td>
+                <td style="border: none; width: 25%;">
+                    HIỆU TRƯỞNG<br />
+                    <span style="font-weight: normal; font-style: italic; font-size: 11px;">(Ký, đóng dấu, họ tên)</span>
+                    <div style="height: 65px;"></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+</body>
+</html>

@@ -7,7 +7,7 @@ using QuanLyCSVC_PhuocHoa.Models.Entities;
 
 namespace QuanLyCSVC_PhuocHoa.Controllers;
 
-[Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
+[Authorize]
 public class LoaiPhongController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -27,10 +27,12 @@ public class LoaiPhongController : Controller
         return View(await query.OrderBy(l => l.TenLoaiPhong).ToListAsync());
     }
 
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public IActionResult Create() => View(new LoaiPhong());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Create(LoaiPhong model)
     {
         if (await _context.LoaiPhong.AnyAsync(l => l.TenLoaiPhong == model.TenLoaiPhong))
@@ -44,6 +46,7 @@ public class LoaiPhongController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Edit(int id)
     {
         var item = await _context.LoaiPhong.FindAsync(id);
@@ -52,6 +55,7 @@ public class LoaiPhongController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Edit(int id, LoaiPhong model)
     {
         if (id != model.Id) return NotFound();
@@ -69,6 +73,7 @@ public class LoaiPhongController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Delete(int id)
     {
         var item = await _context.LoaiPhong

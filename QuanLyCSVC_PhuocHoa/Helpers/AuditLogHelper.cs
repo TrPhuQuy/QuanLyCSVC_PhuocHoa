@@ -11,9 +11,19 @@ public static class AuditLogHelper
     {
         try
         {
+            // Đảm bảo UserId luôn tồn tại trong AspNetUsers để không vi phạm ràng buộc FK_AuditLog_Users
+            string? validUserId = userId;
+            var userExists = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.AnyAsync(context.Users, u => u.Id == validUserId);
+            if (!userExists)
+            {
+                var fallbackUser = await Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.FirstOrDefaultAsync(context.Users);
+                if (fallbackUser == null) return;
+                validUserId = fallbackUser.Id;
+            }
+
             var log = new LichSuHoatDong
             {
-                UserId = userId,
+                UserId = validUserId,
                 HanhDong = hanhDong,
                 DoiTuong = doiTuong,
                 ThoiGian = DateTime.Now,

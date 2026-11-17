@@ -29,6 +29,7 @@ public class NavbarAlertsViewComponent : ViewComponent
         var soPhieuMuonChoDuyet = await _context.PhieuMuon.CountAsync(p => p.TrangThai == "Chờ duyệt");
         var soDieuChuyenChoDuyet = await _context.DieuChuyen.CountAsync(p => p.TrangThai == "Chờ duyệt");
         var soThanhLyChoDuyet = await _context.PhieuThanhLy.CountAsync(p => p.TrangThai == "Đề nghị");
+        var soPhieuBaoTriDangSua = await _context.PhieuBaoTri.CountAsync(p => p.TrangThai == "Đang sửa");
 
         var quaHan = await _context.PhieuMuon
             .Include(p => p.GiaoVien)
@@ -51,6 +52,7 @@ public class NavbarAlertsViewComponent : ViewComponent
             SoPhieuMuonChoDuyet = soPhieuMuonChoDuyet,
             SoDieuChuyenChoDuyet = soDieuChuyenChoDuyet,
             SoThanhLyChoDuyet = soThanhLyChoDuyet,
+            SoPhieuBaoTriDangSua = soPhieuBaoTriDangSua,
             DanhSachQuaHan = quaHan
         };
 

@@ -5,7 +5,7 @@ using QuanLyCSVC_PhuocHoa.Data;
 
 namespace QuanLyCSVC_PhuocHoa.Controllers;
 
-[Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
+[Authorize]
 public class LoaiThietBiController : Controller
 {
     private readonly ApplicationDbContext _context;
@@ -15,20 +15,29 @@ public class LoaiThietBiController : Controller
     public async Task<IActionResult> Index() =>
         View(await _context.LoaiThietBi.OrderBy(l => l.TenLoaiTB).ToListAsync());
 
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public IActionResult Create() => View(new LoaiThietBi());
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Create(LoaiThietBi model)
     {
+        if (await _context.LoaiThietBi.AnyAsync(l => l.TenLoaiTB.ToLower() == model.TenLoaiTB.Trim().ToLower()))
+        {
+            ModelState.AddModelError(nameof(model.TenLoaiTB), "Tên loại thiết bị này đã tồn tại.");
+        }
+
         if (!ModelState.IsValid) return View(model);
 
+        model.TenLoaiTB = model.TenLoaiTB.Trim();
         _context.LoaiThietBi.Add(model);
         await _context.SaveChangesAsync();
         TempData["Success"] = "Thêm loại thiết bị thành công.";
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Edit(int id)
     {
         var item = await _context.LoaiThietBi.FindAsync(id);
@@ -37,11 +46,19 @@ public class LoaiThietBiController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Edit(int id, LoaiThietBi model)
     {
         if (id != model.Id) return NotFound();
+
+        if (await _context.LoaiThietBi.AnyAsync(l => l.Id != id && l.TenLoaiTB.ToLower() == model.TenLoaiTB.Trim().ToLower()))
+        {
+            ModelState.AddModelError(nameof(model.TenLoaiTB), "Tên loại thiết bị này đã tồn tại.");
+        }
+
         if (!ModelState.IsValid) return View(model);
 
+        model.TenLoaiTB = model.TenLoaiTB.Trim();
         _context.LoaiThietBi.Update(model);
         await _context.SaveChangesAsync();
         TempData["Success"] = "Cập nhật loại thiết bị thành công.";
@@ -50,6 +67,7 @@ public class LoaiThietBiController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Delete(int id)
     {
         var item = await _context.LoaiThietBi

@@ -1,0 +1,300 @@
+@model QuanLyCSVC_PhuocHoa.Models.ViewModels.BaoCaoViewModel
+@{
+    ViewData["Title"] = "Báo cáo thống kê cơ sở vật chất";
+}
+
+<div class="page-header-box d-flex flex-wrap justify-content-between align-items-center gap-3">
+    <div>
+        <h2 class="d-flex align-items-center gap-2">
+            <i class="bi bi-file-earmark-bar-graph text-primary"></i>
+            <span>Báo cáo - Thống kê Cơ sở vật chất</span>
+        </h2>
+        <p>Tổng hợp chỉ số tài sản, thiết bị dạy học, hao mòn lũy kế &amp; kinh phí bảo trì &bull; Trường THCS Phước Hòa</p>
+    </div>
+    <div class="d-flex gap-2">
+        <a asp-action="ExportExcel" class="btn btn-outline-success">
+            <i class="bi bi-file-earmark-excel"></i> Xuất Excel Báo cáo
+        </a>
+        <a asp-action="PrintReport" target="_blank" class="btn btn-primary">
+            <i class="bi bi-printer"></i> Bản in Báo cáo Tổng kết
+        </a>
+    </div>
+</div>
+
+<!-- 4 Thẻ chỉ số tài chính CSVC chính -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card accent-primary border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted small mb-1 fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">NGUYÊN GIÁ TÀI SẢN</p>
+                        <h4 class="mb-0 fw-bold text-primary font-monospace">@Model.TongNguyenGia.ToString("N0") <small class="fs-6 text-muted">đ</small></h4>
+                        <small class="text-muted small">Tổng @Model.TongThietBi thiết bị hoạt động</small>
+                    </div>
+                    <div class="stat-icon primary"><i class="bi bi-cash-stack"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card accent-danger border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted small mb-1 fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">HAO MÒN LŨY KẾ (TT 45)</p>
+                        <h4 class="mb-0 fw-bold text-danger font-monospace">@Model.TongHaoMonLuyKe.ToString("N0") <small class="fs-6 text-muted">đ</small></h4>
+                        <small class="text-muted small">Đã trích tính hao mòn TSCĐ</small>
+                    </div>
+                    <div class="stat-icon danger"><i class="bi bi-graph-down-arrow"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card accent-success border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted small mb-1 fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">GIÁ TRỊ CÒN LẠI SỔ SÁCH</p>
+                        <h4 class="mb-0 fw-bold text-success font-monospace">@Model.TongGiaTriConLai.ToString("N0") <small class="fs-6 text-muted">đ</small></h4>
+                        <small class="text-muted small">Giá trị tài sản thực tế còn lại</small>
+                    </div>
+                    <div class="stat-icon success"><i class="bi bi-wallet2"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-lg-3">
+        <div class="card stat-card accent-warning border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <p class="text-muted small mb-1 fw-bold text-uppercase" style="font-size: 0.72rem; letter-spacing: 0.05em;">KINH PHÍ BẢO TRÌ ĐÃ CHI</p>
+                        <h4 class="mb-0 fw-bold text-warning font-monospace">@Model.TongChiPhiBaoTri.ToString("N0") <small class="fs-6 text-muted">đ</small></h4>
+                        <small class="text-muted small">Qua @Model.LichSuBaoTri.Count phiếu bảo trì</small>
+                    </div>
+                    <div class="stat-icon warning"><i class="bi bi-tools"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabs chi tiết số liệu -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white pt-3 pb-0 border-bottom-0">
+        <ul class="nav nav-tabs card-header-tabs" id="baoCaoTabs" role="tablist">
+            <li class="nav-item">
+                <button class="nav-link active fw-bold" id="phong-tab" data-bs-toggle="tab" data-bs-target="#phong" type="button" role="tab">
+                    <i class="bi bi-door-open me-1 text-primary"></i> Theo Phòng học &amp; Khu chức năng (@Model.ThongKeTheoPhong.Count)
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link fw-bold" id="loai-tab" data-bs-toggle="tab" data-bs-target="#loai" type="button" role="tab">
+                    <i class="bi bi-tags me-1 text-success"></i> Theo Phân loại thiết bị (@Model.ThongKeTheoLoai.Count)
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link fw-bold" id="bomon-tab" data-bs-toggle="tab" data-bs-target="#bomon" type="button" role="tab">
+                    <i class="bi bi-journal-bookmark me-1 text-warning"></i> Theo Tổ bộ môn (@Model.ThongKeTheoBoMon.Count)
+                </button>
+            </li>
+            <li class="nav-item">
+                <button class="nav-link fw-bold" id="baotri-tab" data-bs-toggle="tab" data-bs-target="#baotri" type="button" role="tab">
+                    <i class="bi bi-wrench me-1 text-danger"></i> Kinh phí sửa chữa - bảo trì
+                </button>
+            </li>
+        </ul>
+    </div>
+    <div class="card-body p-0">
+        <div class="tab-content" id="baoCaoTabsContent">
+            <!-- TAB 1: Theo Phòng -->
+            <div class="tab-pane fade show active p-3" id="phong" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 120px;">Mã phòng</th>
+                                <th>Tên phòng</th>
+                                <th>Loại phòng</th>
+                                <th>Người phụ trách</th>
+                                <th class="text-center">Số loại TB</th>
+                                <th class="text-center">Tổng số lượng</th>
+                                <th class="text-end">Tổng nguyên giá</th>
+                                <th class="text-end">Giá trị còn lại</th>
+                                <th class="text-center" style="width: 110px;">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var p in Model.ThongKeTheoPhong)
+                            {
+                                <tr>
+                                    <td><span class="code-tag text-primary">@p.MaPhong</span></td>
+                                    <td><strong>@p.TenPhong</strong></td>
+                                    <td><span class="badge bg-light text-dark border">@p.LoaiPhong</span></td>
+                                    <td>@(string.IsNullOrEmpty(p.NguoiPhuTrach) ? "-" : p.NguoiPhuTrach)</td>
+                                    <td class="text-center font-monospace"><span class="badge bg-secondary">@p.SoChungLoai</span></td>
+                                    <td class="text-center font-monospace"><span class="badge bg-primary">@p.TongSoLuong</span></td>
+                                    <td class="text-end fw-semibold text-dark font-monospace">@p.TongGiaTri.ToString("N0") đ</td>
+                                    <td class="text-end fw-semibold text-success font-monospace">@p.GiaTriConLai.ToString("N0") đ</td>
+                                    <td class="text-center">
+                                        <div class="table-actions justify-content-center">
+                                            <a asp-controller="Phong" asp-action="Details" asp-route-id="@p.PhongId" class="btn btn-sm btn-outline-info" title="Xem chi tiết phòng">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a asp-controller="ThietBi" asp-action="PrintLabels" asp-route-phongId="@p.PhongId" target="_blank" class="btn btn-sm btn-outline-dark" title="In tem tất cả thiết bị">
+                                                <i class="bi bi-printer"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="fw-bold">
+                            <tr>
+                                <td colspan="4" class="text-uppercase">Tổng cộng toàn trường:</td>
+                                <td class="text-center font-monospace">@Model.ThongKeTheoPhong.Sum(x => x.SoChungLoai)</td>
+                                <td class="text-center font-monospace">@Model.ThongKeTheoPhong.Sum(x => x.TongSoLuong)</td>
+                                <td class="text-end text-primary font-monospace">@Model.ThongKeTheoPhong.Sum(x => x.TongGiaTri).ToString("N0") đ</td>
+                                <td class="text-end text-success font-monospace">@Model.ThongKeTheoPhong.Sum(x => x.GiaTriConLai).ToString("N0") đ</td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 2: Theo Loại Thiết Bị -->
+            <div class="tab-pane fade p-3" id="loai" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Loại thiết bị</th>
+                                <th class="text-center">Số chủng loại</th>
+                                <th class="text-center">Tổng số lượng</th>
+                                <th class="text-end">Tổng giá trị</th>
+                                <th class="text-center text-success">Đang sử dụng</th>
+                                <th class="text-center text-danger">Hư hỏng</th>
+                                <th class="text-center text-warning">Đang sửa</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var l in Model.ThongKeTheoLoai)
+                            {
+                                <tr>
+                                    <td><strong class="text-dark">@l.TenLoaiTB</strong></td>
+                                    <td class="text-center font-monospace">@l.SoChungLoai</td>
+                                    <td class="text-center font-monospace fw-bold">@l.TongSoLuong</td>
+                                    <td class="text-end fw-semibold text-primary font-monospace">@l.TongGiaTri.ToString("N0") đ</td>
+                                    <td class="text-center"><span class="badge bg-success font-monospace">@l.SoLuongTot</span></td>
+                                    <td class="text-center"><span class="badge bg-danger font-monospace">@l.SoLuongHong</span></td>
+                                    <td class="text-center"><span class="badge bg-warning font-monospace text-dark">@l.SoLuongDangSua</span></td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot class="fw-bold">
+                            <tr>
+                                <td>Tổng cộng:</td>
+                                <td class="text-center font-monospace">@Model.ThongKeTheoLoai.Sum(x => x.SoChungLoai)</td>
+                                <td class="text-center font-monospace">@Model.ThongKeTheoLoai.Sum(x => x.TongSoLuong)</td>
+                                <td class="text-end text-primary font-monospace">@Model.ThongKeTheoLoai.Sum(x => x.TongGiaTri).ToString("N0") đ</td>
+                                <td class="text-center text-success font-monospace">@Model.ThongKeTheoLoai.Sum(x => x.SoLuongTot)</td>
+                                <td class="text-center text-danger font-monospace">@Model.ThongKeTheoLoai.Sum(x => x.SoLuongHong)</td>
+                                <td class="text-center text-warning font-monospace">@Model.ThongKeTheoLoai.Sum(x => x.SoLuongDangSua)</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 3: Theo Tổ Bộ Môn -->
+            <div class="tab-pane fade p-3" id="bomon" role="tabpanel">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th>Tổ bộ môn</th>
+                                <th class="text-center">Số giáo viên</th>
+                                <th class="text-center">Số loại thiết bị</th>
+                                <th class="text-center">Tổng số lượng TB</th>
+                                <th class="text-end">Tổng giá trị thiết bị phụ trách</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var bm in Model.ThongKeTheoBoMon)
+                            {
+                                <tr>
+                                    <td><strong class="text-dark">@bm.TenBoMon</strong></td>
+                                    <td class="text-center"><span class="badge bg-info text-dark font-monospace">@bm.SoGiaoVien GV</span></td>
+                                    <td class="text-center font-monospace">@bm.SoChungLoaiTb</td>
+                                    <td class="text-center font-monospace fw-bold">@bm.TongSoLuongTb</td>
+                                    <td class="text-end fw-semibold text-primary font-monospace">@bm.TongGiaTri.ToString("N0") đ</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 4: Lịch sử & Chi phí Bảo Trì -->
+            <div class="tab-pane fade p-3" id="baotri" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h6 class="mb-0 fw-bold"><i class="bi bi-clock-history text-primary"></i> Các đợt bảo trì gần nhất (Tổng chi phí: <span class="text-danger font-monospace">@Model.TongChiPhiBaoTri.ToString("N0") đ</span>)</h6>
+                    <a asp-controller="PhieuBaoTri" asp-action="Index" class="btn btn-sm btn-outline-primary">Xem tất cả phiếu bảo trì &rarr;</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead>
+                            <tr>
+                                <th style="width: 120px;">Mã phiếu</th>
+                                <th>Thiết bị</th>
+                                <th>Phòng</th>
+                                <th>Ngày gửi</th>
+                                <th>Ngày hoàn thành</th>
+                                <th class="text-end">Kinh phí</th>
+                                <th>Đơn vị thực hiện</th>
+                                <th class="text-center">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (!Model.LichSuBaoTri.Any())
+                            {
+                                <tr><td colspan="8" class="text-center text-muted py-4">Chưa có bản ghi bảo trì nào</td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var bt in Model.LichSuBaoTri)
+                                {
+                                    <tr>
+                                        <td><span class="code-tag text-primary">@bt.MaBaoTri</span></td>
+                                        <td><strong class="text-dark">@bt.TenThietBi</strong></td>
+                                        <td>@bt.TenPhong</td>
+                                        <td class="font-monospace">@bt.NgayGui.ToString("dd/MM/yyyy")</td>
+                                        <td class="font-monospace">@(bt.NgayNhanLai?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                        <td class="text-end fw-bold text-danger font-monospace">@bt.ChiPhi.ToString("N0") đ</td>
+                                        <td>@(string.IsNullOrEmpty(bt.DonViSua) ? "-" : bt.DonViSua)</td>
+                                        <td class="text-center">
+                                            @{
+                                                var (stClass, stDot) = bt.TrangThai switch
+                                                {
+                                                    "Hoàn thành" => ("success", "active"),
+                                                    "Đang sửa" => ("warning", "warning"),
+                                                    _ => ("danger", "danger")
+                                                };
+                                            }
+                                            <span class="badge bg-@stClass">
+                                                <span class="status-dot @stDot"></span>@bt.TrangThai
+                                            </span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

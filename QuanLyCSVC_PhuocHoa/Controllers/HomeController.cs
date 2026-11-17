@@ -31,8 +31,9 @@ public class HomeController : Controller
             TongGiaTriTaiSan = thietBis.Where(t => t.TinhTrang != "Thanh lý").Sum(t => (t.GiaMua ?? 0) * t.SoLuong),
             PhieuMuonChoDuyet          = await _context.PhieuMuon.CountAsync(p => p.TrangThai == "Chờ duyệt"),
             PhieuDieuChuyenChoDuyet    = await _context.DieuChuyen.CountAsync(p => p.TrangThai == "Chờ duyệt"),
+            PhieuBaoTriDangSua         = await _context.PhieuBaoTri.CountAsync(p => p.TrangThai == "Đang sửa"),
             ThongKeTheoLoais = thietBis
-                .GroupBy(t => t.LoaiThietBi.TenLoaiTB)
+                .GroupBy(t => t.LoaiThietBi?.TenLoaiTB ?? "Chưa phân loại")
                 .Select(g => new ThongKeTheoLoai { TenLoai = g.Key, SoLuong = g.Sum(x => x.SoLuong) })
                 .OrderByDescending(x => x.SoLuong)
                 .ToList()

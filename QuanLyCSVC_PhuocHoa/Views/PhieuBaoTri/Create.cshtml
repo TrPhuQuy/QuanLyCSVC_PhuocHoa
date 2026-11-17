@@ -6,6 +6,17 @@
 <h2 class="mb-4">@ViewData["Title"]</h2>
 <div class="card shadow-sm col-md-8">
     <div class="card-body">
+        @if (ViewBag.SelectedThietBi != null)
+        {
+            var tb = (ThietBi)ViewBag.SelectedThietBi;
+            <div class="alert alert-warning d-flex align-items-center gap-2 mb-3">
+                <i class="bi bi-exclamation-triangle-fill fs-4 text-warning"></i>
+                <div>
+                    <div><strong>Báo sự cố thiết bị:</strong> @tb.TenTb (<span class="badge bg-dark">@tb.MaTb</span>)</div>
+                    <small class="text-muted">Phòng học: <strong>@(tb.Phong?.TenPhong ?? "Chưa xếp phòng")</strong></small>
+                </div>
+            </div>
+        }
         <form asp-action="Create" method="post">
             @Html.AntiForgeryToken()
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>

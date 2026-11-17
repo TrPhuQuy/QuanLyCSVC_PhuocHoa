@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using QuanLyCSVC_PhuocHoa.Data;
 using QuanLyCSVC_PhuocHoa.Models;
+using QuanLyCSVC_PhuocHoa.Helpers;
 
 namespace QuanLyCSVC_PhuocHoa.Controllers;
 
@@ -18,7 +19,7 @@ public class LichSuHoatDongController : Controller
         _context = context;
     }
 
-    public async Task<IActionResult> Index(string? search, string? doiTuong, string? fromDate, string? toDate)
+    public async Task<IActionResult> Index(string? search, string? doiTuong, string? fromDate, string? toDate, int page = 1)
     {
         var query = _context.LichSuHoatDong
             .Include(l => l.User)
@@ -28,8 +29,8 @@ public class LichSuHoatDongController : Controller
         if (!string.IsNullOrWhiteSpace(search))
         {
             query = query.Where(l => l.HanhDong.Contains(search) || 
-                                     l.User.Email.Contains(search) || 
-                                     (l.User.NhanVien != null && l.User.NhanVien.HoTen.Contains(search)));
+                                     (l.User != null && l.User.Email != null && l.User.Email.Contains(search)) || 
+                                     (l.User != null && l.User.NhanVien != null && l.User.NhanVien.HoTen.Contains(search)));
         }
 
         if (!string.IsNullOrWhiteSpace(doiTuong))
@@ -60,11 +61,7 @@ public class LichSuHoatDongController : Controller
             .OrderBy(d => d)
             .ToListAsync();
 
-        var logs = await query
-            .OrderByDescending(l => l.ThoiGian)
-            .Take(500) // Limit to top 500 logs for performance
-            .ToListAsync();
-
-        return View(logs);
+        var pagedLogs = await PaginatedList<LichSuHoatDong>.CreateAsync(query.OrderByDescending(l => l.ThoiGian), page, 20);
+        return View(pagedLogs);
     }
 }

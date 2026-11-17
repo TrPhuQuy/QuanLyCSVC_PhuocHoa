@@ -11,6 +11,7 @@ public class DashboardViewModel
     public decimal TongGiaTriTaiSan { get; set; }
     public int PhieuMuonChoDuyet { get; set; }
     public int PhieuDieuChuyenChoDuyet { get; set; }
+    public int PhieuBaoTriDangSua { get; set; }
     public List<ThongKeTheoLoai> ThongKeTheoLoais { get; set; } = [];
 }
 

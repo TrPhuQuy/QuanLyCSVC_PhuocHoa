@@ -1,4 +1,4 @@
-@model IEnumerable<NhaCungCap>
+@model PaginatedList<NhaCungCap>
 @{
     ViewData["Title"] = "Danh mục Nhà cung cấp";
 }
@@ -67,3 +67,5 @@
         </table>
     </div>
 </div>
+
+<partial name="_Pagination" model="Model" />

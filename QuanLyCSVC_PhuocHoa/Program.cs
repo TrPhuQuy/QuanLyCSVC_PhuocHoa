@@ -28,6 +28,12 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 builder.Services.AddControllersWithViews();
 
+builder.Services.Configure<Microsoft.AspNetCore.Http.Features.FormOptions>(options =>
+{
+    options.ValueCountLimit = 10000;
+    options.KeyLengthLimit = 2048;
+});
+
 var app = builder.Build();
 
 // Chỉ tạo roles và đồng bộ users từ NhanVien - không xóa dữ liệu hiện có

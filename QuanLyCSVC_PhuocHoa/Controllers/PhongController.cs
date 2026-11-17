@@ -3,17 +3,19 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using QuanLyCSVC_PhuocHoa.Data;
+using QuanLyCSVC_PhuocHoa.Helpers;
+using System.Security.Claims;
 
 namespace QuanLyCSVC_PhuocHoa.Controllers;
 
-[Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
+[Authorize]
 public class PhongController : Controller
 {
     private readonly ApplicationDbContext _context;
 
     public PhongController(ApplicationDbContext context) => _context = context;
 
-    public async Task<IActionResult> Index(string? search)
+    public async Task<IActionResult> Index(string? search, int page = 1)
     {
         var query = _context.Phong
             .Include(p => p.LoaiPhong)
@@ -24,7 +26,8 @@ public class PhongController : Controller
             query = query.Where(p => p.TenPhong.Contains(search) || p.MaPhong.Contains(search));
 
         ViewBag.Search = search;
-        return View(await query.OrderBy(p => p.MaPhong).ToListAsync());
+        var pagedItems = await PaginatedList<Phong>.CreateAsync(query.OrderBy(p => p.MaPhong), page, 15);
+        return View(pagedItems);
     }
 
     public async Task<IActionResult> Details(int id)
@@ -33,11 +36,13 @@ public class PhongController : Controller
             .Include(p => p.LoaiPhong)
             .Include(p => p.NguoiPhuTrach)
             .Include(p => p.ThietBi).ThenInclude(t => t.LoaiThietBi)
+            .Include(p => p.ThietBi).ThenInclude(t => t.BoMon)
             .FirstOrDefaultAsync(p => p.Id == id);
         if (phong == null) return NotFound();
         return View(phong);
     }
 
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Create()
     {
         await LoadSelectLists();
@@ -46,6 +51,7 @@ public class PhongController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Create(Phong phong)
     {
         if (await _context.Phong.AnyAsync(p => p.MaPhong == phong.MaPhong))
@@ -64,6 +70,7 @@ public class PhongController : Controller
         return RedirectToAction(nameof(Index));
     }
 
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Edit(int id)
     {
         var phong = await _context.Phong.FindAsync(id);
@@ -74,6 +81,7 @@ public class PhongController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Edit(int id, Phong phong)
     {
         if (id != phong.Id) return NotFound();
@@ -95,6 +103,7 @@ public class PhongController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
+    [Authorize(Roles = $"{AppRoles.Admin},{AppRoles.NhanVienThietBi}")]
     public async Task<IActionResult> Delete(int id)
     {
         var phong = await _context.Phong
@@ -108,9 +117,31 @@ public class PhongController : Controller
             return RedirectToAction(nameof(Index));
         }
 
-        _context.Phong.Remove(phong);
-        await _context.SaveChangesAsync();
-        TempData["Success"] = "Xóa phòng thành công.";
+        bool hasDieuChuyen = await _context.DieuChuyen.AnyAsync(d => d.PhongDiId == id || d.PhongDenId == id);
+        if (hasDieuChuyen)
+        {
+            TempData["Error"] = "Không thể xóa phòng vì đã có lịch sử điều chuyển thiết bị liên quan đến phòng này. Bạn có thể đổi trạng thái phòng sang 'Tạm đóng cửa'.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        try
+        {
+            _context.Phong.Remove(phong);
+            await _context.SaveChangesAsync();
+
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (!string.IsNullOrEmpty(userId))
+            {
+                await AuditLogHelper.LogAsync(_context, userId, $"Xóa phòng: {phong.TenPhong} ({phong.MaPhong})", "Phòng", HttpContext.Connection.RemoteIpAddress?.ToString());
+            }
+
+            TempData["Success"] = "Xóa phòng thành công.";
+        }
+        catch (DbUpdateException)
+        {
+            TempData["Error"] = "Không thể xóa phòng này do có dữ liệu liên quan trong hệ thống. Vui lòng chuyển trạng thái phòng sang 'Tạm đóng cửa'.";
+        }
+
         return RedirectToAction(nameof(Index));
     }
 

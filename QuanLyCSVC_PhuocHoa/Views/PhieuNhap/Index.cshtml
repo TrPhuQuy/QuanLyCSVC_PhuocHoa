@@ -1,4 +1,4 @@
-@model IEnumerable<PhieuNhap>
+@model PaginatedList<PhieuNhap>
 @{
     ViewData["Title"] = "Quản lý Phiếu nhập Thiết bị";
 }
@@ -60,7 +60,7 @@
             {
                 <tfoot class="table-light">
                     <tr>
-                        <td colspan="5" class="text-end fw-bold">Tổng cộng:</td>
+                        <td colspan="5" class="text-end fw-bold">Tổng tiền (trang này):</td>
                         <td class="fw-bold text-success">@Model.Sum(p => p.TongTien).ToString("N0") đ</td>
                         <td></td>
                     </tr>
@@ -69,3 +69,5 @@
         </table>
     </div>
 </div>
+
+<partial name="_Pagination" model="Model" />
